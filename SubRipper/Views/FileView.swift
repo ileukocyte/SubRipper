@@ -8,20 +8,18 @@
 import SwiftUI
 
 struct FileView: View {
-    let file: SrtFile
-
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
 
-    @Binding var showFileImporter: Bool
-
+    @State var file: SrtFile
+    @State private var showFileImporter = false
     @State private var selection: SrtEntry.ID?
     @State private var showError = false
     @State private var errorMessage: String?
 
     var body: some View {
         ZStack {
-            FileTableView(entries: file.entries, selection: $selection)
+            FileTableView(entries: $file.entries, selection: $selection)
         }
         .onDisappear {
             file.url.stopAccessingSecurityScopedResource()
@@ -69,7 +67,7 @@ struct FileView: View {
 }
 
 #Preview {
-    let url = URL(fileURLWithPath: "~/Movies/movies/watch later/A Heart in Winter (1992).srt")
+    let url = URL(fileURLWithPath: "A Heart in Winter (1992).srt")
     let content = """
 1
 00:00:28,571 --> 00:00:31,658
@@ -105,6 +103,6 @@ all dressed up?
 What do you mean?
 """
 
-    FileView(file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(content)), showFileImporter: .constant(false))
+    FileView(file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(content)))
         .environment(SubRipperStore())
 }

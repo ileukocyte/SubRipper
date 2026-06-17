@@ -13,11 +13,10 @@ struct SubRipperApp: App {
     static let srtType = UTType(filenameExtension: "srt") ?? .item
 
     @State private var store = SubRipperStore()
-    @State private var showFileImporter = false
 
     var body: some Scene {
         Window("SubRipper", id: "startup") {
-            StartupView(showFileImporter: $showFileImporter)
+            StartupView()
                 .onAppear {
                     NSApp.centerWindow(id: "startup")
                 }
@@ -27,38 +26,19 @@ struct SubRipperApp: App {
         .defaultSize(width: 600, height: 400)
         .defaultLaunchBehavior(.presented)
         .commands {
-            CommandGroup(replacing: .newItem) {}
-            CommandGroup(after: .newItem) {
-                Button {
-                    showFileImporter = true
-                } label: {
-                    Label("Open...", systemImage: "arrow.up.right.square")
-                }
-                .keyboardShortcut("o", modifiers: .command)
-            }
+            FileCommands(store: store)
         }
         .environment(store)
         
         WindowGroup("File", id: "file", for: UUID.self) { $id in
             if let id, let file = store[id] {
-                FileView(file: file, showFileImporter: $showFileImporter)
+                FileView(file: file)
                     .onAppear {
                         NSApp.maximizeWindow(id: nil)
                     }
             }
         }
         .defaultPosition(.center)
-        .commands {
-            CommandGroup(replacing: .newItem) {}
-            CommandGroup(after: .newItem) {
-                Button {
-                    showFileImporter = true
-                } label: {
-                    Label("Open...", systemImage: "arrow.up.right.square")
-                }
-                .keyboardShortcut("o", modifiers: .command)
-            }
-        }
         .environment(store)
 
         #if os(macOS)

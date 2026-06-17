@@ -34,5 +34,5 @@ class SubRipperStore {
 struct SrtFile: Identifiable {
     let id = UUID()
     let url: URL
-    let entries: [SrtEntry]
+    var entries: [SrtEntry]
 }

@@ -8,10 +8,17 @@
 import SwiftUI
 
 struct FileTableView: View {
-    let entries: [SrtEntry]
+    @Binding var entries: [SrtEntry]
 
     @Binding var selection: SrtEntry.ID?
     @State private var showTestAlert = false
+
+    private var selectedEntry: Binding<SrtEntry>? {
+        guard let selection else { return nil }
+        guard let index = entries.firstIndex(where: { $0.id == selection }) else { return nil }
+
+        return $entries[index]
+    }
 
     var body: some View {
         Table(of: SrtEntry.self, selection: $selection) {
@@ -25,7 +32,12 @@ struct FileTableView: View {
             }
             .width(125)
 
-            TableColumn("Subtitle", value: \.content)
+            TableColumn("Subtitle") {
+                Text($0.content)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 2.5)
+            }
         } rows: {
             ForEach(entries) { entry in
                 TableRow(entry)
@@ -44,23 +56,19 @@ struct FileTableView: View {
                     }
             }
         }
-        .alert("test content alert", isPresented: $showTestAlert) {
+        .alert("test editable content", isPresented: $showTestAlert, presenting: selectedEntry) { $entry in
+            TextField("", text: $entry.content, axis: .vertical)
+
             Button("OK", role: .confirm) {
                 
             }
             .keyboardShortcut(.defaultAction)
-        } message: {
-            if let selection, let entry = entries.first(where: { $0.id == selection }) {
-                Text(entry.content)
-            } else {
-                Text("N/A")
-            }
         }
     }
 }
 
 #Preview {
-    let content = """
+    @Previewable @State var entries = try! SrtMarshaler.unmarshal("""
 1
 00:00:28,571 --> 00:00:31,658
 (door opens)
@@ -93,7 +101,7 @@ all dressed up?
 8
 00:00:56,433 --> 00:00:58,351
 What do you mean?
-"""
+""")
 
-    FileTableView(entries: try! SrtMarshaler.unmarshal(content), selection: .constant(nil))
+    FileTableView(entries: $entries, selection: .constant(nil))
 }

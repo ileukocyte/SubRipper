@@ -10,9 +10,8 @@ import SwiftUI
 struct StartupView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
-    
-    @Binding var showFileImporter: Bool
 
+    @State private var showFileImporter = false
     @State private var showError = false
     @State private var errorMessage: String?
 
@@ -84,6 +83,6 @@ struct StartupView: View {
 }
 
 #Preview {
-    StartupView(showFileImporter: .constant(false))
+    StartupView()
         .environment(SubRipperStore())
 }
