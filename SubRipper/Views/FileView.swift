@@ -12,14 +12,14 @@ struct FileView: View {
     @Environment(SubRipperStore.self) private var store
 
     @State var file: SrtFile
+    @State private var isEditing = true
     @State private var showFileImporter = false
-    @State private var selection: SrtEntry.ID?
     @State private var showError = false
     @State private var errorMessage: String?
 
     var body: some View {
         ZStack {
-            FileTableView(entries: $file.entries, selection: $selection)
+            FileTableView(entries: $file.entries, isEditing: $isEditing)
         }
         .onDisappear {
             file.url.stopAccessingSecurityScopedResource()
@@ -31,6 +31,15 @@ struct FileView: View {
         }
         .navigationTitle(file.url.lastPathComponent)
         .frame(minWidth: 800, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    isEditing.toggle()
+                } label: {
+                    Label("Edit Subtitle", systemImage: "pencil")
+                }
+            }
+        }
         .fileImporter(
             isPresented: $showFileImporter,
             allowedContentTypes: [SubRipperApp.srtType]

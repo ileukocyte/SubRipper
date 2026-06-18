@@ -9,9 +9,9 @@ import SwiftUI
 
 struct FileTableView: View {
     @Binding var entries: [SrtEntry]
+    @Binding var isEditing: Bool
 
-    @Binding var selection: SrtEntry.ID?
-    @State private var showTestAlert = false
+    @State private var selection: SrtEntry.ID?
 
     private var selectedEntry: Binding<SrtEntry>? {
         guard let selection else { return nil }
@@ -43,7 +43,7 @@ struct FileTableView: View {
                 TableRow(entry)
                     .contextMenu {
                         Button {
-                            showTestAlert = true
+                            isEditing = true
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
@@ -56,13 +56,18 @@ struct FileTableView: View {
                     }
             }
         }
-        .alert("test editable content", isPresented: $showTestAlert, presenting: selectedEntry) { $entry in
-            TextField("", text: $entry.content, axis: .vertical)
-
-            Button("OK", role: .confirm) {
-                
+        .inspector(isPresented: $isEditing) {
+            if let selectedEntry {
+                SubtitleInspectorView(selectedEntry: selectedEntry)
+                    .inspectorColumnWidth(min: 250, ideal: 300, max: 500)
+            } else {
+                ContentUnavailableView {
+                    Image(systemName: "pencil.and.ellipsis.rectangle")
+                } description: {
+                    Text("Select a subtitle to edit")
+                }
+                .inspectorColumnWidth(min: 250, ideal: 300, max: 500)
             }
-            .keyboardShortcut(.defaultAction)
         }
     }
 }
@@ -103,5 +108,7 @@ all dressed up?
 What do you mean?
 """)
 
-    FileTableView(entries: $entries, selection: .constant(nil))
+    FileTableView(entries: $entries, isEditing: .constant(true))
+        .navigationTitle("A Heart in Winter (1992).srt")
+        .frame(width: 800, height: 500)
 }
