@@ -34,7 +34,9 @@ struct SubRipperApp: App {
             if let id, let file = store[id] {
                 FileView(file: file)
                     .onAppear {
-                        NSApp.maximizeWindow(id: nil)
+                        DispatchQueue.main.async {
+                            NSApp.maximizeWindow(id: nil)
+                        }
                     }
             }
         }

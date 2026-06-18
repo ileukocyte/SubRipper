@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FileTableView: View {
     @Binding var entries: [SrtEntry]
-    @Binding var isEditing: Bool
+    @Binding var showSubtitleInspector: Bool
 
     @State private var selection: SrtEntry.ID?
 
@@ -50,7 +50,7 @@ struct FileTableView: View {
                     }
             }
         }
-        .inspector(isPresented: $isEditing) {
+        .inspector(isPresented: $showSubtitleInspector) {
             if let selectedEntry {
                 SubtitleInspectorView(selectedEntry: selectedEntry)
                     .inspectorColumnWidth(min: 250, ideal: 300, max: 500)
@@ -102,7 +102,7 @@ all dressed up?
 What do you mean?
 """)
 
-    FileTableView(entries: $entries, isEditing: .constant(true))
+    FileTableView(entries: $entries, showSubtitleInspector: .constant(true))
         .navigationTitle("A Heart in Winter (1992).srt")
         .frame(width: 800, height: 500)
 }

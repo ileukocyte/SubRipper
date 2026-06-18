@@ -72,7 +72,7 @@ struct StartupView: View {
             }
         }
         .alert("Error", isPresented: $showError) {
-            Button("OK", role: .close) {
+            Button("OK", role: .cancel) {
                 
             }
             .keyboardShortcut(.defaultAction)

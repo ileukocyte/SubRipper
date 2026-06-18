@@ -11,15 +11,13 @@ struct FileView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
 
-    @State var file: SrtFile
-    @State private var isEditing = true
-    @State private var showFileImporter = false
-    @State private var showError = false
-    @State private var errorMessage: String?
+    @Bindable var file: SrtFile
+
+    @State private var showSubtitleInspector = true
 
     var body: some View {
         ZStack {
-            FileTableView(entries: $file.entries, isEditing: $isEditing)
+            FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
         }
         .onDisappear {
             file.url.stopAccessingSecurityScopedResource()
@@ -34,43 +32,11 @@ struct FileView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    isEditing.toggle()
+                    showSubtitleInspector.toggle()
                 } label: {
                     Label("Edit Subtitle", systemImage: "pencil")
                 }
             }
-        }
-        .fileImporter(
-            isPresented: $showFileImporter,
-            allowedContentTypes: [SubRipperApp.srtType]
-        ) { result in
-            switch result {
-            case .success(let url):
-                let accessed = url.startAccessingSecurityScopedResource()
-
-                do {
-                    let file = try store.load(url: url)
-
-                    openWindow(id: "file", value: file.id)
-                } catch {
-                    if accessed {
-                        url.stopAccessingSecurityScopedResource()
-                    }
-
-                    errorMessage = error.localizedDescription
-                    showError = true
-                }
-            case .failure(let error):
-                errorMessage = error.localizedDescription
-                showError = true
-            }
-        }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .close) {
-                
-            }.keyboardShortcut(.defaultAction)
-        } message: {
-            Text(errorMessage ?? "Unknown error")
         }
     }
 }

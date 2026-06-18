@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import RegexBuilder
 
 enum SrtParseError: Error {
     case invalidIndex(String)
@@ -57,6 +56,7 @@ enum SrtMarshaler {
 
     static func unmarshal(_ data: String) throws -> [SrtEntry] {
         let normalizedData = data
+            .trimmingCharacters(in: .init(charactersIn: "\u{feff}"))
             .replacingOccurrences(of: "\r\n", with: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 

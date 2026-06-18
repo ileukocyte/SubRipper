@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SrtEntry: Identifiable, Hashable {
+struct SrtEntry: Identifiable {
     let id = UUID()
     var index: Int
     var startTime: TimeInterval
