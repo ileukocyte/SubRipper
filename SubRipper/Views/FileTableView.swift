@@ -42,12 +42,6 @@ struct FileTableView: View {
             ForEach(entries) { entry in
                 TableRow(entry)
                     .contextMenu {
-                        Button {
-                            isEditing = true
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-
                         Button(role: .destructive) {
                             
                         } label: {
