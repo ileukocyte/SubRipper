@@ -13,7 +13,7 @@ enum SrtParseError: Error {
 }
 
 enum SrtMarshaler {
-    static let timestampRegex = /((?<hours>\d{2,}):(?<minutes>\d{2}):(?<seconds>\d{2}),(?<ms>\d{3}))/
+    static let timestampRegex = /(?<hours>\d{2,}):(?<minutes>\d{2}):(?<seconds>\d{2}),(?<ms>\d{3})/
     static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>\d{2}):(?<startSeconds>\d{2}),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>\d{2}):(?<endSeconds>\d{2}),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/
         .anchorsMatchLineEndings()
 
@@ -62,7 +62,7 @@ enum SrtMarshaler {
 
         return try normalizedData.matches(of: entryRegex).map { match in
             guard let index = Int(match.index) else {
-                throw SrtParseError.invalidIndex(String(match.1))
+                throw SrtParseError.invalidIndex(String(match.index))
             }
 
             let startTime = try Self.parseTime(match.startHours, match.startMinutes, match.startSeconds, match.startMs)
