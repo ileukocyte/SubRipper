@@ -14,8 +14,17 @@ enum SrtParseError: Error {
 }
 
 enum SrtMarshaler {
+    static let timestampRegex = /((?<hours>\d{2,}):(?<minutes>\d{2}):(?<seconds>\d{2}),(?<ms>\d{3}))/
     static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>\d{2}):(?<startSeconds>\d{2}),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>\d{2}):(?<endSeconds>\d{2}),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/
         .anchorsMatchLineEndings()
+
+    static func parseTime(formatted: String) throws -> TimeInterval {
+        guard let match = try? timestampRegex.wholeMatch(in: formatted) else {
+            throw SrtParseError.invalidTimeComponent(formatted)
+        }
+
+        return try Self.parseTime(match.hours, match.minutes, match.seconds, match.ms)
+    }
 
     static func parseTime(
         _ hours: Substring,
@@ -52,7 +61,7 @@ enum SrtMarshaler {
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         return try normalizedData.matches(of: entryRegex).map { match in
-            guard let id = Int(match.index) else {
+            guard let index = Int(match.index) else {
                 throw SrtParseError.invalidIndex(String(match.1))
             }
 
@@ -61,7 +70,7 @@ enum SrtMarshaler {
             let text = match.content.trimmingCharacters(in: .whitespacesAndNewlines)
 
             return SrtEntry(
-                id: id,
+                index: index,
                 startTime: startTime,
                 endTime: endTime,
                 content: text
@@ -71,7 +80,7 @@ enum SrtMarshaler {
 
     static func marshal(_ entries: [SrtEntry]) -> String {
         return entries.map { entry in
-            "\(entry.id)\n" +
+            "\(entry.index)\n" +
             "\(Self.formatTime(entry.startTime)) --> \(Self.formatTime(entry.endTime))\n" +
             entry.content
         }.joined(separator: "\n\n")

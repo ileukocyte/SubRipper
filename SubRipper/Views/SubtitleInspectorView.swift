@@ -10,6 +10,9 @@ import SwiftUI
 struct SubtitleInspectorView: View {
     @Binding var selectedEntry: SrtEntry
 
+    @State private var startTimePopover = false
+    @State private var endTimePopover = false
+
     var body: some View {
         Form {
             Section(header: Text("Subtitle")) {
@@ -19,8 +22,47 @@ struct SubtitleInspectorView: View {
             }
 
             Section(header: Text("Timing")) {
-                LabeledContent("Start", value: SrtMarshaler.formatTime(selectedEntry.startTime))
-                LabeledContent("End", value: SrtMarshaler.formatTime(selectedEntry.endTime))
+                Button {
+                    startTimePopover.toggle()
+                } label: {
+                    LabeledContent("Start") {
+                        Text(SrtMarshaler.formatTime(selectedEntry.startTime))
+                            .font(.system(.body, design: .monospaced))
+                    }
+                    .background(.bar)
+                }
+                .buttonStyle(.plain)
+                .onHover { inView in
+                    if inView {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+                .popover(isPresented: $startTimePopover) {
+                    TimestampPopoverView(timestamp: $selectedEntry.startTime)
+                }
+
+                Button {
+                    endTimePopover.toggle()
+                } label: {
+                    LabeledContent("End") {
+                        Text(SrtMarshaler.formatTime(selectedEntry.endTime))
+                            .font(.system(.body, design: .monospaced))
+                    }
+                    .background(.bar)
+                }
+                .buttonStyle(.plain)
+                .onHover { inView in
+                    if inView {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+                .popover(isPresented: $endTimePopover) {
+                    TimestampPopoverView(timestamp: $selectedEntry.endTime)
+                }
             }
         }
         .padding()
@@ -28,7 +70,7 @@ struct SubtitleInspectorView: View {
 }
 
 #Preview {
-    @Previewable @State var entry = SrtEntry(id: 1, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?")
+    @Previewable @State var entry = SrtEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?")
     ZStack {}
         .inspector(isPresented: .constant(true)) {
             SubtitleInspectorView(selectedEntry: $entry)
