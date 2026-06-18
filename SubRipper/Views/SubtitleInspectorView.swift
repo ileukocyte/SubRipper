@@ -16,9 +16,7 @@ struct SubtitleInspectorView: View {
     var body: some View {
         Form {
             Section(header: Text("Subtitle")) {
-                TextEditor(text: $selectedEntry.content)
-                    .scrollContentBackground(.hidden)
-                    .frame(minHeight: 80)
+                SubtitleTextEditor(content: $selectedEntry.content)
             }
 
             Section(header: Text("Timing")) {
@@ -29,7 +27,7 @@ struct SubtitleInspectorView: View {
                         Text(SrtMarshaler.formatTime(selectedEntry.startTime))
                             .font(.system(.body, design: .monospaced))
                     }
-                    .background(.bar)
+                    .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .onHover { inView in
@@ -50,7 +48,7 @@ struct SubtitleInspectorView: View {
                         Text(SrtMarshaler.formatTime(selectedEntry.endTime))
                             .font(.system(.body, design: .monospaced))
                     }
-                    .background(.bar)
+                    .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .onHover { inView in
@@ -65,7 +63,7 @@ struct SubtitleInspectorView: View {
                 }
             }
         }
-        .padding()
+        .padding(10)
     }
 }
 
