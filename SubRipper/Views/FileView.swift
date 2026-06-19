@@ -19,6 +19,7 @@ struct FileView: View {
         ZStack {
             FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
         }
+        .focusedSceneValue(\.activeFile, file)
         .onDisappear {
             file.url.stopAccessingSecurityScopedResource()
             store.remove(id: file.id)
@@ -36,6 +37,7 @@ struct FileView: View {
                 } label: {
                     Label("Edit Subtitle", systemImage: "pencil")
                 }
+                .keyboardShortcut("i", modifiers: .command)
             }
         }
     }

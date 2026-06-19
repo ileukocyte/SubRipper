@@ -7,11 +7,6 @@
 
 import Foundation
 
-enum SrtParseError: Error {
-    case invalidIndex(String)
-    case invalidTimeComponent(String)
-}
-
 enum SrtMarshaler {
     static let timestampRegex = /(?<hours>\d{2,}):(?<minutes>\d{2}):(?<seconds>\d{2}),(?<ms>\d{3})/
     static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>\d{2}):(?<startSeconds>\d{2}),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>\d{2}):(?<endSeconds>\d{2}),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/

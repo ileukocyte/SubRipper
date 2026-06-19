@@ -12,8 +12,6 @@ struct StartupView: View {
     @Environment(SubRipperStore.self) private var store
 
     @State private var showFileImporter = false
-    @State private var showError = false
-    @State private var errorMessage: String?
 
     var body: some View {
         ZStack {
@@ -63,21 +61,11 @@ struct StartupView: View {
                         url.stopAccessingSecurityScopedResource()
                     }
 
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    Alerts.showDefaultErrorAlert(for: error)
                 }
             case .failure(let error):
-                errorMessage = error.localizedDescription
-                showError = true
+                Alerts.showDefaultErrorAlert(for: error)
             }
-        }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {
-                
-            }
-            .keyboardShortcut(.defaultAction)
-        } message: {
-            Text(errorMessage ?? "Unknown error")
         }
     }
 }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FileCommands: Commands {
     @Environment(\.openWindow) private var openWindow
+    @FocusedValue(\.activeFile) private var activeFile
 
     var store: SubRipperStore
 
@@ -34,12 +35,23 @@ struct FileCommands: Commands {
                             url.stopAccessingSecurityScopedResource()
                         }
 
-                        let alert = NSAlert(error: error)
-                        alert.runModal()
+                        Alerts.showDefaultErrorAlert(for: error)
                     }
                 }
             }
             .keyboardShortcut("o", modifiers: .command)
+
+            Button("Save", systemImage: "square.and.arrow.down") {
+                guard let file = activeFile else { return }
+
+                do {
+                    try store.export(file: file)
+                } catch {
+                    Alerts.showDefaultErrorAlert(for: error)
+                }
+            }
+            .keyboardShortcut("s", modifiers: .command)
+            .disabled(activeFile == nil)
         }
     }
 }
