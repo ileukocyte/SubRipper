@@ -18,7 +18,9 @@ struct SubtitleTextEditorView: View {
     }
 
     var canSave: Bool {
-        content != draft
+        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return !trimmed.isEmpty && content != trimmed
     }
 
     var body: some View {
@@ -35,7 +37,11 @@ struct SubtitleTextEditorView: View {
                 Spacer()
 
                 Button("Save") {
-                    draft = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+                    draft = draft
+                        .components(separatedBy: "\n")
+                        .map { $0.trimmingCharacters(in: .whitespaces) }
+                        .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+                        .joined(separator: "\n")
                     content = draft
                 }
                 .disabled(!canSave)

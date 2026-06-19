@@ -23,15 +23,12 @@ struct TimestampPopoverView: View {
     }
 
     var canSave: Bool {
-        guard let _ = try? SrtMarshaler.parseTime(formatted: formatted) else {
+        // checks for regex matching as well
+        guard let formatted = addMissingLeadingZeros(to: formatted) else {
             return false
         }
 
-        guard SrtMarshaler.formatTime(timestamp) != formatted else {
-            return false
-        }
-
-        return true
+        return SrtMarshaler.formatTime(timestamp) != formatted
     }
 
     var body: some View {
@@ -68,6 +65,18 @@ struct TimestampPopoverView: View {
             }
         }
         .padding()
+    }
+
+    private func addMissingLeadingZeros(to string: String) -> String? {
+        guard let match = try? SrtMarshaler.timestampRegex.wholeMatch(in: string) else {
+            return nil
+        }
+
+        let hours = match.hours.count == 1 ? "0\(match.hours)" : match.hours
+        let minutes = match.minutes.count == 1 ? "0\(match.minutes)" : match.minutes
+        let seconds = match.seconds.count == 1 ? "0\(match.seconds)" : match.seconds
+
+        return "\(hours):\(minutes):\(seconds),\(match.ms)"
     }
 }
 

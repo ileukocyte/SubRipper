@@ -8,8 +8,9 @@
 import Foundation
 
 enum SrtMarshaler {
-    static let timestampRegex = /(?<hours>\d{2,}):(?<minutes>\d{2}):(?<seconds>\d{2}),(?<ms>\d{3})/
-    static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>\d{2}):(?<startSeconds>\d{2}),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>\d{2}):(?<endSeconds>\d{2}),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/
+    // timestampRegex is used for interval timestamp validation, so digit count matching is not as strict
+    static let timestampRegex = /(?<hours>\d*\d):(?<minutes>[0-5]?\d):(?<seconds>[0-5]?\d),(?<ms>\d{1,3})/
+    static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>[0-5]\d):(?<startSeconds>[0-5]\d),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>[0-5]\d):(?<endSeconds>[0-5]\d),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/
         .anchorsMatchLineEndings()
 
     static func parseTime(formatted: String) throws -> TimeInterval {
@@ -26,12 +27,18 @@ enum SrtMarshaler {
         _ seconds: Substring,
         _ milliseconds: Substring
     ) throws -> TimeInterval {
+        let millisecondsTrailingZeros = if milliseconds.count == 3 {
+            milliseconds
+        } else {
+            milliseconds + String(repeating: "0", count: 3 - milliseconds.count)
+        }
+
         guard let h = Double(hours),
               let m = Double(minutes),
               let s = Double(seconds),
-              let ms = Double(milliseconds)
+              let ms = Double(millisecondsTrailingZeros)
         else {
-            throw SrtParseError.invalidTimeComponent("\(hours):\(minutes):\(seconds),\(milliseconds)")
+            throw SrtParseError.invalidTimeComponent("\(hours):\(minutes):\(seconds),\(millisecondsTrailingZeros)")
         }
 
         return h * 3600 + m * 60 + s + ms / 1000
