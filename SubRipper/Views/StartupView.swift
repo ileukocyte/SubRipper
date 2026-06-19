@@ -17,29 +17,34 @@ struct StartupView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 12) {
-                Image(systemName: "captions.bubble")
-                    .font(.system(size: 56, weight: .light))
-                    .foregroundStyle(.secondary)
-                
-                Text("SubRipper")
-                    .font(.largeTitle.weight(.bold))
-                
-                Text("Open an .srt file to get started")
-                    .foregroundStyle(.secondary)
-                
-                Button("Open", systemImage: "arrow.up.forward") {
-                    showFileImporter = true
+                Group {
+                    Image(systemName: "captions.bubble")
+                        .font(.system(size: 56, weight: .light))
+                        .foregroundStyle(.secondary)
+
+                    Text("SubRipper")
+                        .font(.largeTitle.weight(.bold))
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.accentColor)
-                .controlSize(.large)
-                
-                Text("or drag a file anywhere into this window")
-                    .font(.footnote)
-                    .foregroundStyle(.tertiary)
+
+                Group {
+                    Text("Open an .srt file to get started")
+                        .foregroundStyle(.secondary)
+                        
+                    Button("Open", systemImage: "arrow.up.forward") {
+                        showFileImporter = true
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(.accentColor)
+                    .controlSize(.large)
+
+                    Text("or drag a file anywhere into this window")
+                        .font(.footnote)
+                        .foregroundStyle(.tertiary)
+                }
             }
         }
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+        .navigationTitle("")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .windowMinimizeBehavior(.disabled)
         .windowResizeBehavior(.disabled)
@@ -87,5 +92,7 @@ struct StartupView: View {
 
 #Preview {
     StartupView()
+        .navigationTitle("")
+        .containerBackground(.clear, for: .window)
         .environment(SubRipperStore())
 }

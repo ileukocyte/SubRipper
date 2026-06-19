@@ -14,9 +14,12 @@ struct TimestampPopoverView: View {
 
     @State private var formatted: String
 
-    init(timestamp: Binding<TimeInterval>) {
+    var heading: String?
+
+    init(timestamp: Binding<TimeInterval>, heading: String? = nil) {
         self._timestamp = timestamp
         self._formatted = State(initialValue: SrtMarshaler.formatTime(timestamp.wrappedValue))
+        self.heading = heading
     }
 
     var canSave: Bool {
@@ -33,24 +36,36 @@ struct TimestampPopoverView: View {
 
     var body: some View {
         VStack(spacing: 15) {
-            TextField("Timestamp", text: $formatted)
-                .frame(width: 100)
-                .onSubmit {
+            Section {
+                TextField("Timestamp", text: $formatted)
+                    .frame(width: 100)
+                    .onChange(of: formatted) { _, newValue in
+                        formatted = newValue.filter {
+                            $0.isNumber || $0 == ":" || $0 == ","
+                        }
+                    }
+                    .onSubmit {
+                        if let time = try? SrtMarshaler.parseTime(formatted: formatted) {
+                            timestamp = time
+                            dismiss()
+                        }
+                    }
+
+                Button("Save") {
                     if let time = try? SrtMarshaler.parseTime(formatted: formatted) {
                         timestamp = time
                         dismiss()
                     }
                 }
-            
-            Button("Save") {
-                if let time = try? SrtMarshaler.parseTime(formatted: formatted) {
-                    timestamp = time
-                    dismiss()
+                .disabled(!canSave)
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+            } header: {
+                if let heading {
+                    Text(heading)
+                        .font(.headline)
                 }
             }
-            .disabled(!canSave)
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.capsule)
         }
         .padding()
     }
@@ -67,7 +82,7 @@ struct TimestampPopoverView: View {
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.capsule)
         .popover(isPresented: $isPresented) {
-            TimestampPopoverView(timestamp: $timestamp)
+            TimestampPopoverView(timestamp: $timestamp, heading: "End Time")
         }
     }
     .padding(20)

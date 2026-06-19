@@ -17,6 +17,7 @@ struct SubtitleInspectorView: View {
         Form {
             Section(header: Text("Subtitle")) {
                 SubtitleTextEditor(content: $selectedEntry.content)
+                    .id(selectedEntry.id)
             }
 
             Section(header: Text("Timing")) {
@@ -38,7 +39,8 @@ struct SubtitleInspectorView: View {
                     }
                 }
                 .popover(isPresented: $startTimePopover) {
-                    TimestampPopoverView(timestamp: $selectedEntry.startTime)
+                    TimestampPopoverView(timestamp: $selectedEntry.startTime, heading: "Start Time")
+                        .id(selectedEntry.id)
                 }
 
                 Button {
@@ -59,7 +61,8 @@ struct SubtitleInspectorView: View {
                     }
                 }
                 .popover(isPresented: $endTimePopover) {
-                    TimestampPopoverView(timestamp: $selectedEntry.endTime)
+                    TimestampPopoverView(timestamp: $selectedEntry.endTime, heading: "End Time")
+                        .id(selectedEntry.id)
                 }
             }
         }

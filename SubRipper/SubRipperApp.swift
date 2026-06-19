@@ -27,7 +27,7 @@ struct SubRipperApp: App {
         }
         .environment(store)
         
-        WindowGroup("File", id: "file", for: UUID.self) { $id in
+        WindowGroup("SubRipper", id: "file", for: UUID.self) { $id in
             if let id, let file = store[id] {
                 FileView(file: file)
                     .onAppear {

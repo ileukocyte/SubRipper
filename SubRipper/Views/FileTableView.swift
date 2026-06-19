@@ -42,11 +42,19 @@ struct FileTableView: View {
             ForEach(entries) { entry in
                 TableRow(entry)
                     .contextMenu {
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(entry.content, forType: .string)
+                        } label: {
+                            Label("Copy Subtitle", systemImage: "doc.on.doc")
+                        }
+
                         Button(role: .destructive) {
                             
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .disabled(true)
                     }
             }
         }
