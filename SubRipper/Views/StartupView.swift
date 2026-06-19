@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct StartupView: View {
     @Environment(\.openWindow) private var openWindow
@@ -45,7 +46,7 @@ struct StartupView: View {
         .background(.ultraThinMaterial)
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: [SubRipperApp.srtType],
+            allowedContentTypes: [.srt],
         ) { result in
             switch result {
             case .success(let url):
@@ -64,6 +65,20 @@ struct StartupView: View {
                     Alerts.showDefaultErrorAlert(for: error)
                 }
             case .failure(let error):
+                Alerts.showDefaultErrorAlert(for: error)
+            }
+        }
+        .dropDestination(for: URL.self) { items, _ in
+            guard let url = items.first(where: { $0.pathExtension.lowercased() == "srt" }) else {
+                return
+            }
+
+            do {
+                let file = try store.load(url: url)
+
+                NSApp.closeWindow(id: "startup")
+                openWindow(id: "file", value: file.id)
+            } catch {
                 Alerts.showDefaultErrorAlert(for: error)
             }
         }

@@ -8,5 +8,5 @@
 import SwiftUI
 
 extension FocusedValues {
-    @Entry var activeFile: SrtFile? = nil
+    @Entry var currentFile: SrtFile? = nil
 }

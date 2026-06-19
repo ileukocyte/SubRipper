@@ -34,14 +34,6 @@ class SubRipperStore {
         openFiles.removeAll()
     }
 
-    func export(id: UUID, to url: URL? = nil) throws {
-        guard let file = self[id] else {
-            throw SubRipperError.invalidUuid(id)
-        }
-
-        try export(file: file, to: url)
-    }
-
     func export(file: SrtFile, to url: URL? = nil) throws {
         let content = SrtMarshaler.marshal(file.entries)
         try content.write(to: url ?? file.url, atomically: true, encoding: .utf8)

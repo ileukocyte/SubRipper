@@ -7,11 +7,23 @@
 
 import Foundation
 
-enum SrtParseError: Error {
+enum SrtParseError: LocalizedError {
     case invalidIndex(String)
     case invalidTimeComponent(String)
-}
 
-enum SubRipperError: Error {
-    case invalidUuid(UUID)
+    var errorDescription: String? {
+        switch self {
+        case .invalidIndex(let index):
+            return "Invalid subtitle index: \(index)"
+        case .invalidTimeComponent(let component):
+            return "Invalid timestamp format: \(component)"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        default:
+            return "Please check the format of the .srt file."
+        }
+    }
 }

@@ -53,14 +53,14 @@ struct FileTableView: View {
         .inspector(isPresented: $showSubtitleInspector) {
             if let selectedEntry {
                 SubtitleInspectorView(selectedEntry: selectedEntry)
-                    .inspectorColumnWidth(min: 250, ideal: 300, max: 500)
+                    .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
             } else {
                 ContentUnavailableView {
                     Image(systemName: "pencil.and.ellipsis.rectangle")
                 } description: {
                     Text("Select a subtitle to edit")
                 }
-                .inspectorColumnWidth(min: 250, ideal: 300, max: 500)
+                .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
             }
         }
     }

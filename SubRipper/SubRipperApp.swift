@@ -6,12 +6,9 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 @main
 struct SubRipperApp: App {
-    static let srtType = UTType(filenameExtension: "srt") ?? .item
-
     @State private var store = SubRipperStore()
 
     var body: some Scene {

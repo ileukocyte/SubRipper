@@ -19,7 +19,7 @@ struct FileView: View {
         ZStack {
             FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
         }
-        .focusedSceneValue(\.activeFile, file)
+        .focusedSceneValue(\.currentFile, file)
         .onDisappear {
             file.url.stopAccessingSecurityScopedResource()
             store.remove(id: file.id)

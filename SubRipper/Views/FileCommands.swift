@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FileCommands: Commands {
     @Environment(\.openWindow) private var openWindow
-    @FocusedValue(\.activeFile) private var activeFile
+    @FocusedValue(\.currentFile) private var currentFile
 
     var store: SubRipperStore
 
@@ -18,7 +18,7 @@ struct FileCommands: Commands {
         CommandGroup(after: .newItem) {
             Button("Open...", systemImage: "arrow.up.right.square") {
                 let panel = NSOpenPanel()
-                panel.allowedContentTypes = [SubRipperApp.srtType]
+                panel.allowedContentTypes = [.srt]
                 panel.allowsMultipleSelection = false
                 panel.canChooseDirectories = false
 
@@ -42,7 +42,9 @@ struct FileCommands: Commands {
             .keyboardShortcut("o", modifiers: .command)
 
             Button("Save", systemImage: "square.and.arrow.down") {
-                guard let file = activeFile else { return }
+                guard let file = currentFile else {
+                    return
+                }
 
                 do {
                     try store.export(file: file)
@@ -51,7 +53,7 @@ struct FileCommands: Commands {
                 }
             }
             .keyboardShortcut("s", modifiers: .command)
-            .disabled(activeFile == nil)
+            .disabled(currentFile == nil)
         }
     }
 }
