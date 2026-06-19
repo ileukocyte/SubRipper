@@ -20,6 +20,7 @@ struct FileView: View {
             FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
         }
         .focusedSceneValue(\.currentFile, file)
+        .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
         .onDisappear {
             file.url.stopAccessingSecurityScopedResource()
             store.remove(id: file.id)
@@ -38,7 +39,6 @@ struct FileView: View {
                 } label: {
                     Label("Edit Subtitle", systemImage: "pencil")
                 }
-                .keyboardShortcut("i", modifiers: .command)
             }
         }
     }

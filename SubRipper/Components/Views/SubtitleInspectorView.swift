@@ -16,7 +16,7 @@ struct SubtitleInspectorView: View {
     var body: some View {
         Form {
             Section(header: Text("Subtitle")) {
-                SubtitleTextEditor(content: $selectedEntry.content)
+                SubtitleTextEditorView(content: $selectedEntry.content)
                     .id(selectedEntry.id)
             }
 

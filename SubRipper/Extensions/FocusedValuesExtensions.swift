@@ -9,4 +9,5 @@ import SwiftUI
 
 extension FocusedValues {
     @Entry var currentFile: SrtFile? = nil
+    @Entry var showSubtitleInspector: Binding<Bool>? = nil
 }

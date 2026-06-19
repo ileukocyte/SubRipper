@@ -10,12 +10,28 @@ import SwiftUI
 struct FileCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.currentFile) private var currentFile
+    @FocusedValue(\.showSubtitleInspector) private var showSubtitleInspector
 
     var store: SubRipperStore
 
     var body: some Commands {
-        CommandGroup(replacing: .newItem) {}
-        CommandGroup(after: .newItem) {
+        CommandGroup(before: .sidebar) {
+            Button {
+                if let showSubtitleInspector {
+                    showSubtitleInspector.wrappedValue.toggle()
+                }
+            } label: {
+                let isExpanded = showSubtitleInspector?.wrappedValue ?? false
+
+                Label("\(isExpanded ? "Hide" : "Show") Inspector", systemImage: "sidebar.right")
+            }
+            .keyboardShortcut("i", modifiers: [.option, .command])
+            .disabled(currentFile == nil)
+
+            Divider()
+        }
+
+        CommandGroup(replacing: .newItem) {
             Button("Open...", systemImage: "arrow.up.right.square") {
                 let panel = NSOpenPanel()
                 panel.allowedContentTypes = [.srt]

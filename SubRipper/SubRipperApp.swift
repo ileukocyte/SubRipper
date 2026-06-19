@@ -26,13 +26,14 @@ struct SubRipperApp: App {
             FileCommands(store: store)
         }
         .environment(store)
-        
+
         WindowGroup("SubRipper", id: "file", for: UUID.self) { $id in
             if let id, let file = store[id] {
                 FileView(file: file)
                     .onAppear {
                         DispatchQueue.main.async {
                             NSApp.maximizeWindow(id: nil)
+                            NSWindow.allowsAutomaticWindowTabbing = false
                         }
                     }
             }

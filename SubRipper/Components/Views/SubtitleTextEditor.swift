@@ -1,5 +1,5 @@
 //
-//  SubtitleTextEditor.swift
+//  SubtitleTextEditorView.swift
 //  SubRipper
 //
 //  Created by Alexander Oksanich on 6/18/2026.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SubtitleTextEditor: View {
+struct SubtitleTextEditorView: View {
     @Binding var content: String
 
     @State private var draft: String
@@ -49,7 +49,7 @@ struct SubtitleTextEditor: View {
 
     Form {
         Section(header: Text("Subtitle")) {
-            SubtitleTextEditor(content: $content)
+            SubtitleTextEditorView(content: $content)
         }
     }
     .formStyle(.grouped)

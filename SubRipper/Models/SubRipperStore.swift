@@ -5,7 +5,7 @@
 //  Created by Alexander Oksanich on 6/16/2026.
 //
 
-import SwiftUI
+import Foundation
 
 @Observable
 class SubRipperStore {
@@ -43,17 +43,5 @@ class SubRipperStore {
         for file in openFiles {
             try export(file: file)
         }
-    }
-}
-
-@Observable
-class SrtFile: Identifiable {
-    let id = UUID()
-    let url: URL
-    var entries: [SrtEntry]
-
-    init(url: URL, entries: [SrtEntry]) {
-        self.url = url
-        self.entries = entries
     }
 }
