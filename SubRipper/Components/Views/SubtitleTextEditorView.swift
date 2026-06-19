@@ -27,11 +27,15 @@ struct SubtitleTextEditorView: View {
                 .font(.system(.body))
                 .scrollContentBackground(.hidden)
                 .frame(height: 100)
+                .onChange(of: draft) { _, newValue in
+                    draft = newValue.replacing(/\n{2,}/, with: "\n")
+                }
 
             HStack {
                 Spacer()
 
                 Button("Save") {
+                    draft = draft.trimmingCharacters(in: .whitespacesAndNewlines)
                     content = draft
                 }
                 .disabled(!canSave)
