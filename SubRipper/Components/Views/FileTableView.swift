@@ -11,13 +11,16 @@ struct FileTableView: View {
     @Binding var entries: [SrtEntry]
     @Binding var showSubtitleInspector: Bool
 
-    @State private var selection: SrtEntry.ID?
+    @State private var selection = Set<SrtEntry.ID>()
 
-    private var selectedEntry: Binding<SrtEntry>? {
-        guard let selection else { return nil }
-        guard let index = entries.firstIndex(where: { $0.id == selection }) else { return nil }
+    private var selectedEntries: [Binding<SrtEntry>] {
+        selection.compactMap { id in
+            guard let index = entries.firstIndex(where: { $0.id == id }) else {
+                return nil
+            }
 
-        return $entries[index]
+            return $entries[index]
+        }
     }
 
     var body: some View {
@@ -59,9 +62,13 @@ struct FileTableView: View {
             }
         }
         .inspector(isPresented: $showSubtitleInspector) {
-            if let selectedEntry {
-                SubtitleInspectorView(selectedEntry: selectedEntry)
-                    .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
+            if !selectedEntries.isEmpty {
+                SubtitleInspectorView(entries: selectedEntries) {
+                    selection = Set(entries.map(\.id))
+                } deselect: {
+                    selection.removeAll()
+                }
+                .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
             } else {
                 ContentUnavailableView {
                     Image(systemName: "pencil.and.ellipsis.rectangle")

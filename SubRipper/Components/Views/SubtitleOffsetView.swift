@@ -10,7 +10,7 @@ import SwiftUI
 struct SubtitleOffsetView: View {
     static let formattedDefault = "00:00:00,000"
 
-    @Binding var entry: SrtEntry
+    var entries: [Binding<SrtEntry>]
 
     @State private var timestamp: TimeInterval = 0
     @State private var formatted: String = Self.formattedDefault
@@ -93,13 +93,15 @@ struct SubtitleOffsetView: View {
     }
 
     private func applyOffset() {
-        switch sign {
-        case .plus:
-            entry.startTime += timestamp
-            entry.endTime += timestamp
-        case .minus:
-            entry.startTime = max(0, entry.startTime - timestamp)
-            entry.endTime = max(0, entry.endTime - timestamp)
+        for entry in entries {
+            switch sign {
+            case .plus:
+                entry.wrappedValue.startTime += timestamp
+                entry.wrappedValue.endTime += timestamp
+            case .minus:
+                entry.wrappedValue.startTime = max(0, entry.wrappedValue.startTime - timestamp)
+                entry.wrappedValue.endTime = max(0, entry.wrappedValue.endTime - timestamp)
+            }
         }
 
         timestamp = 0
@@ -109,7 +111,7 @@ struct SubtitleOffsetView: View {
 }
 
 #Preview {
-    @Previewable @State var entry = SrtEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?")
+    @Previewable var entries: [Binding<SrtEntry>] = [.constant(SrtEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))]
 
-    SubtitleOffsetView(entry: $entry)
+    SubtitleOffsetView(entries: entries)
 }
