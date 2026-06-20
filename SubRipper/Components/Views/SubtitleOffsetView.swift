@@ -54,9 +54,13 @@ struct SubtitleOffsetView: View {
             Stepper {
                 
             } onIncrement: {
-                formatted = SrtMarshaler.formatTime(timestamp + 1)
+                let offsetSeconds = calculateOffset()
+
+                formatted = SrtMarshaler.formatTime(timestamp + offsetSeconds)
             } onDecrement: {
-                formatted = SrtMarshaler.formatTime(max(0, timestamp - 1))
+                let offsetSeconds = calculateOffset()
+
+                formatted = SrtMarshaler.formatTime(max(0, timestamp - offsetSeconds))
             }
         }
 
@@ -73,6 +77,18 @@ struct SubtitleOffsetView: View {
             .buttonStyle(.borderedProminent)
 
             Spacer()
+        }
+    }
+
+    private func calculateOffset() -> TimeInterval {
+        if Keys.allModifiersPressed([.option, .shift]) {
+            60
+        } else if Keys.allModifiersPressed([.shift]) {
+            30
+        } else if Keys.allModifiersPressed([.option]) {
+            15
+        } else {
+            1
         }
     }
 
