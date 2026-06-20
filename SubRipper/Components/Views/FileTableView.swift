@@ -75,7 +75,7 @@ struct FileTableView: View {
 }
 
 #Preview {
-    @Previewable @State var entries = try! SrtMarshaler.unmarshal("""
+    @Previewable @State var entries = try! SrtMarshaler.unmarshal(from: """
 1
 00:00:28,571 --> 00:00:31,658
 (door opens)

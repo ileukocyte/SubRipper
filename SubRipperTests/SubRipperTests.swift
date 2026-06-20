@@ -44,7 +44,7 @@ all dressed up?
 00:00:56,433 --> 00:00:58,351
 What do you mean?
 """
-        let entries = try await SrtMarshaler.unmarshal(content)
+        let entries = try await SrtMarshaler.unmarshal(from: content)
         let rebuiltContent = await SrtMarshaler.marshal(entries)
 
         #expect(content == rebuiltContent)

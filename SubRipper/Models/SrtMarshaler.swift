@@ -56,7 +56,7 @@ enum SrtMarshaler {
         return String(format: "%02d:%02d:%02d,%03d", hours, minutes, seconds, ms)
     }
 
-    static func unmarshal(_ data: String) throws -> [SrtEntry] {
+    static func unmarshal(from data: String) throws -> [SrtEntry] {
         let normalizedData = data
             .trimmingCharacters(in: .init(charactersIn: "\u{feff}"))
             .replacingOccurrences(of: "\r\n", with: "\n")
@@ -69,13 +69,17 @@ enum SrtMarshaler {
 
             let startTime = try Self.parseTime(match.startHours, match.startMinutes, match.startSeconds, match.startMs)
             let endTime = try Self.parseTime(match.endHours, match.endMinutes, match.endSeconds, match.endMs)
-            let text = match.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            let content = match.content
+                .components(separatedBy: "\n")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+                .joined(separator: "\n")
 
             return SrtEntry(
                 index: index,
                 startTime: startTime,
                 endTime: endTime,
-                content: text
+                content: content
             )
         }
     }

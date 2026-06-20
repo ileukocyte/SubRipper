@@ -81,6 +81,6 @@ all dressed up?
 What do you mean?
 """
 
-    FileView(file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(content)))
+    FileView(file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(from: content)))
         .environment(SubRipperStore())
 }
