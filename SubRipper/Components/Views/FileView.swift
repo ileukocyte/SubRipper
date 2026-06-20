@@ -16,31 +16,29 @@ struct FileView: View {
     @State private var showSubtitleInspector = true
 
     var body: some View {
-        ZStack {
-            FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
-        }
-        .focusedSceneValue(\.currentFile, file)
-        .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
-        .onDisappear {
-            file.url.stopAccessingSecurityScopedResource()
-            store.remove(id: file.id)
+        FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
+            .focusedSceneValue(\.currentFile, file)
+            .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
+            .onDisappear {
+                file.url.stopAccessingSecurityScopedResource()
+                store.remove(id: file.id)
 
-            if !store.hasOpenFiles {
-                openWindow(id: "startup")
-            }
-        }
-        .navigationTitle(file.url.lastPathComponent)
-        .navigationDocument(file.url)
-        .frame(minWidth: 800, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
-        .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    showSubtitleInspector.toggle()
-                } label: {
-                    Label("Edit Subtitle", systemImage: "pencil")
+                if !store.hasOpenFiles {
+                    openWindow(id: "startup")
                 }
             }
-        }
+            .navigationTitle(file.url.lastPathComponent)
+            .navigationDocument(file.url)
+            .frame(minWidth: 800, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
+            .toolbar {
+                ToolbarItemGroup {
+                    Button {
+                        showSubtitleInspector.toggle()
+                    } label: {
+                        Label("Edit Subtitle", systemImage: "pencil")
+                    }
+                }
+            }
     }
 }
 

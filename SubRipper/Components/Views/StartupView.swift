@@ -78,12 +78,18 @@ struct StartupView: View {
                 return
             }
 
+            let accessed = url.startAccessingSecurityScopedResource()
+
             do {
                 let file = try store.load(url: url)
 
                 NSApp.closeWindow(id: "startup")
                 openWindow(id: "file", value: file.id)
             } catch {
+                if accessed {
+                    url.stopAccessingSecurityScopedResource()
+                }
+
                 Alerts.showDefaultErrorAlert(for: error)
             }
         }

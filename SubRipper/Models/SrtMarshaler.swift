@@ -45,7 +45,7 @@ enum SrtMarshaler {
     }
 
     static func formatTime(_ interval: TimeInterval) -> String {
-        let totalMs = Int((interval * 1000).rounded())
+        let totalMs = Int((abs(interval) * 1000).rounded())
         let ms = totalMs % 1000
         let totalSeconds = totalMs / 1000
         let seconds = totalSeconds % 60
@@ -53,7 +53,9 @@ enum SrtMarshaler {
         let minutes = totalMinutes % 60
         let hours = totalMinutes / 60
 
-        return String(format: "%02d:%02d:%02d,%03d", hours, minutes, seconds, ms)
+        let prefix = interval.sign == .minus ? "-" : ""
+
+        return prefix + String(format: "%02d:%02d:%02d,%03d", hours, minutes, seconds, ms)
     }
 
     static func unmarshal(from data: String) throws -> [SrtEntry] {

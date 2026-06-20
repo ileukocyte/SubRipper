@@ -65,6 +65,14 @@ struct SubtitleInspectorView: View {
                         .id(selectedEntry.id)
                 }
             }
+
+            Section(header: Text("Offset")) {
+                LabeledContent {
+                    SubtitleOffsetView(entry: $selectedEntry)
+                } label: {
+                    
+                }
+            }
         }
         .padding(10)
     }
