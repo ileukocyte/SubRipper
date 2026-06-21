@@ -16,10 +16,18 @@ class SubRipperStore {
         openFiles.first { $0.id == id }
     }
 
+    subscript(url: URL) -> SrtFile? {
+        openFiles.first { $0.url == url }
+    }
+
     func load(url: URL) throws -> SrtFile {
+        if let file = self[url] {
+            return file
+        }
+
         let content = try String(contentsOf: url, encoding: .utf8)
         let entries = try SrtMarshaler.unmarshal(from: content)
-        let file = SrtFile(url: url, entries: entries)
+        let file = SrtFile(url: url, entries: entries, originalContent: content)
 
         openFiles.append(file)
 
@@ -37,6 +45,12 @@ class SubRipperStore {
     func export(file: SrtFile, to url: URL? = nil) throws {
         let content = SrtMarshaler.marshal(file.entries)
         try content.write(to: url ?? file.url, atomically: true, encoding: .utf8)
+
+        file.originalContent = content
+
+        if let url {
+            file.url = url
+        }
     }
 
     func exportAll() throws {

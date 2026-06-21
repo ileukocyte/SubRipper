@@ -78,20 +78,20 @@ struct FileCommands: Commands {
         if let currentFile {
             CommandMenu("Subtitles") {
                 Button("Insert Below", systemImage: "square.bottomthird.inset.filled") {
-                    guard let id = selectedEntries?.first,
+                    guard let id = selectedEntries?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     currentFile.insertNew(after: entry)
                 }
-                .disabled(selectedEntries?.count != 1)
+                .disabled(selectedEntries?.wrappedValue.count != 1)
 
                 Button("Insert Above", systemImage: "square.topthird.inset.filled") {
-                    guard let id = selectedEntries?.first,
+                    guard let id = selectedEntries?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     currentFile.insertNew(before: entry)
                 }
-                .disabled(selectedEntries?.count != 1)
+                .disabled(selectedEntries?.wrappedValue.count != 1)
 
                 Divider()
 
@@ -106,7 +106,7 @@ struct FileCommands: Commands {
                         showSubtitleOffsetSheet.wrappedValue.toggle()
                     }
                 }
-                .disabled(selectedEntries?.isEmpty ?? true)
+                .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
 
                 Divider()
 
@@ -115,10 +115,10 @@ struct FileCommands: Commands {
                         return
                     }
 
-                    currentFile.deleteAll(entries: currentFile.entries.filter { selectedEntries.contains($0.id) })
+                    currentFile.deleteAll(entries: currentFile.entries.filter { selectedEntries.wrappedValue.contains($0.id) })
                 }
                 .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(selectedEntries?.isEmpty ?? true)
+                .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
             }
         }
     }

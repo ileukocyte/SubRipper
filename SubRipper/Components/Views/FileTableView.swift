@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct FileTableView: View {
-    @Binding var entries: [SrtEntry]
+    @Bindable var file: SrtFile
+
     @Binding var showSubtitleInspector: Bool
 
     @State private var selection = Set<SrtEntry.ID>()
@@ -16,11 +17,11 @@ struct FileTableView: View {
 
     private var selectedEntries: [Binding<SrtEntry>] {
         selection.compactMap { id in
-            guard let index = entries.firstIndex(where: { $0.id == id }) else {
+            guard let index = file.entries.firstIndex(where: { $0.id == id }) else {
                 return nil
             }
 
-            return $entries[index]
+            return $file.entries[index]
         }
     }
 
@@ -43,11 +44,11 @@ struct FileTableView: View {
                     .padding(.vertical, 2.5)
             }
         } rows: {
-            ForEach(entries) { entry in
+            ForEach(file.entries) { entry in
                 TableRow(entry)
             }
         }
-        .focusedSceneValue(\.selectedEntries, selection)
+        .focusedSceneValue(\.selectedEntries, $selection)
         .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
         .contextMenu(forSelectionType: SrtEntry.ID.self) { selected in
             let _ = {
@@ -57,13 +58,13 @@ struct FileTableView: View {
             }()
 
             let selectedEntriesMenu: [Binding<SrtEntry>] = selected.compactMap { id in
-                guard let index = entries.firstIndex(where: { entry in
+                guard let index = file.entries.firstIndex(where: { entry in
                     entry.id == id
                 }) else {
                     return nil
                 }
 
-                return $entries[index]
+                return $file.entries[index]
             }
 
             if !selectedEntriesMenu.isEmpty {
@@ -78,13 +79,13 @@ struct FileTableView: View {
                     Divider()
 
                     Button {
-                        insertNew(after: entry.wrappedValue)
+                        file.insertNew(after: entry.wrappedValue)
                     } label: {
                         Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
                     }
 
                     Button {
-                        insertNew(before: entry.wrappedValue)
+                        file.insertNew(before: entry.wrappedValue)
                     } label: {
                         Label("Insert Above", systemImage: "square.topthird.inset.filled")
                     }
@@ -101,7 +102,7 @@ struct FileTableView: View {
                 Divider()
 
                 Button(role: .destructive) {
-                    deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
+                    file.deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
@@ -110,7 +111,7 @@ struct FileTableView: View {
         .inspector(isPresented: $showSubtitleInspector) {
             if !selectedEntries.isEmpty {
                 SubtitleInspectorView(entries: selectedEntries) {
-                    selection = Set(entries.map(\.id))
+                    selection = Set(file.entries.map(\.id))
                 } deselect: {
                     selection.removeAll()
                 }
@@ -131,58 +132,11 @@ struct FileTableView: View {
             .padding()
         }
     }
-
-    private func insertNew(after: SrtEntry) {
-        guard let index = entries.firstIndex(of: after) else {
-            return
-        }
-
-        let new = SrtEntry(
-            index: after.index,
-            startTime: after.endTime,
-            endTime: after.endTime,
-            content: ""
-        )
-
-        entries.insert(new, at: index + 1)
-
-        for i in 0..<entries.count {
-            entries[i].index = i + 1
-        }
-    }
-
-    private func insertNew(before: SrtEntry) {
-        guard let index = entries.firstIndex(of: before) else {
-            return
-        }
-
-        let new = SrtEntry(
-            index: before.index,
-            startTime: before.startTime,
-            endTime: before.startTime,
-            content: ""
-        )
-
-        entries.insert(new, at: index)
-
-        for i in 0..<entries.count {
-            entries[i].index = i + 1
-        }
-    }
-
-    private func deleteAll(entries toDelete: [SrtEntry]) {
-        let indices = toDelete.compactMap { entries.firstIndex(of: $0) }.sorted(by: <)
-
-        entries.remove(atOffsets: IndexSet(indices))
-
-        for i in 0..<entries.count {
-            entries[i].index = i + 1
-        }
-    }
 }
 
 #Preview {
-    @Previewable @State var entries = try! SrtMarshaler.unmarshal(from: """
+    let url = URL(fileURLWithPath: "A Heart in Winter (1992).srt")
+    let content = """
 1
 00:00:28,571 --> 00:00:31,658
 (door opens)
@@ -215,9 +169,12 @@ all dressed up?
 8
 00:00:56,433 --> 00:00:58,351
 What do you mean?
-""")
+"""
 
-    FileTableView(entries: $entries, showSubtitleInspector: .constant(true))
-        .navigationTitle("A Heart in Winter (1992).srt")
-        .frame(width: 800, height: 500)
+    FileTableView(
+        file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(from: content), originalContent: content),
+        showSubtitleInspector: .constant(true)
+    )
+    .navigationTitle("A Heart in Winter (1992).srt")
+    .frame(width: 800, height: 500)
 }

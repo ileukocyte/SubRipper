@@ -10,12 +10,14 @@ import SwiftUI
 @Observable
 class SrtFile: Identifiable {
     let id = UUID()
-    let url: URL
+    var url: URL
     var entries: [SrtEntry]
+    var originalContent: String
 
-    init(url: URL, entries: [SrtEntry]) {
+    init(url: URL, entries: [SrtEntry], originalContent: String) {
         self.url = url
         self.entries = entries
+        self.originalContent = originalContent
     }
 
     func append() {

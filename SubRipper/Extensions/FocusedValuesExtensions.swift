@@ -10,6 +10,6 @@ import SwiftUI
 extension FocusedValues {
     @Entry var currentFile: SrtFile? = nil
     @Entry var showSubtitleInspector: Binding<Bool>? = nil
-    @Entry var selectedEntries: Set<SrtEntry.ID>? = nil
+    @Entry var selectedEntries: Binding<Set<SrtEntry.ID>>? = nil
     @Entry var showSubtitleOffsetSheet: Binding<Bool>? = nil
 }

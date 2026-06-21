@@ -11,12 +11,12 @@ struct FileView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
 
-    @Bindable var file: SrtFile
+    var file: SrtFile
 
     @State private var showSubtitleInspector = true
 
     var body: some View {
-        FileTableView(entries: $file.entries, showSubtitleInspector: $showSubtitleInspector)
+        FileTableView(file: file, showSubtitleInspector: $showSubtitleInspector)
             .focusedSceneValue(\.currentFile, file)
             .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
             .onDisappear {
@@ -79,6 +79,6 @@ all dressed up?
 What do you mean?
 """
 
-    FileView(file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(from: content)))
+    FileView(file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(from: content), originalContent: content))
         .environment(SubRipperStore())
 }

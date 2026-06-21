@@ -48,7 +48,10 @@ struct TimestampPopoverView: View {
                             }
                         }
                         .onSubmit {
-                            timestamp = localTimestamp
+                            if canSave {
+                                timestamp = localTimestamp
+                            }
+
                             dismiss()
                         }
 
