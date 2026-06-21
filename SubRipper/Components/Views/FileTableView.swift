@@ -79,13 +79,13 @@ struct FileTableView: View {
                     Divider()
 
                     Button {
-                        file.insertNew(after: entry.wrappedValue)
+                        file.insertEntry(after: entry.wrappedValue)
                     } label: {
                         Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
                     }
 
                     Button {
-                        file.insertNew(before: entry.wrappedValue)
+                        file.insertEntry(before: entry.wrappedValue)
                     } label: {
                         Label("Insert Above", systemImage: "square.topthird.inset.filled")
                     }
@@ -172,7 +172,11 @@ What do you mean?
 """
 
     FileTableView(
-        file: SrtFile(url: url, entries: try! SrtMarshaler.unmarshal(from: content), originalContent: content),
+        file: SrtFile(
+            url: url,
+            entries: try! SrtMarshaler.unmarshal(from: content),
+            originalContent: content
+        ),
         showSubtitleInspector: .constant(true)
     )
     .navigationTitle("A Heart in Winter (1992).srt")

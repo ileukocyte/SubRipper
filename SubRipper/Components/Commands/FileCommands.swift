@@ -123,7 +123,7 @@ struct FileCommands: Commands {
                     guard let id = selectedEntries?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
-                    currentFile.insertNew(after: entry)
+                    currentFile.insertEntry(after: entry)
                 }
                 .disabled(selectedEntries?.wrappedValue.count != 1)
 
@@ -131,14 +131,14 @@ struct FileCommands: Commands {
                     guard let id = selectedEntries?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
-                    currentFile.insertNew(before: entry)
+                    currentFile.insertEntry(before: entry)
                 }
                 .disabled(selectedEntries?.wrappedValue.count != 1)
 
                 Divider()
 
                 Button("Append", systemImage: "plus") {
-                    currentFile.append()
+                    currentFile.appendEntry()
                 }
 
                 Divider()

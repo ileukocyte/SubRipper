@@ -20,7 +20,7 @@ class SrtFile: Identifiable {
         self.originalContent = originalContent
     }
 
-    func append() {
+    func appendEntry() {
         let new = SrtEntry(
             index: (entries.last?.index ?? 0) + 1,
             startTime: entries.last?.endTime ?? 0,
@@ -31,7 +31,7 @@ class SrtFile: Identifiable {
         entries.append(new)
     }
 
-    func insertNew(after: SrtEntry) {
+    func insertEntry(after: SrtEntry) {
         guard let index = entries.firstIndex(of: after) else {
             return
         }
@@ -50,7 +50,7 @@ class SrtFile: Identifiable {
         }
     }
 
-    func insertNew(before: SrtEntry) {
+    func insertEntry(before: SrtEntry) {
         guard let index = entries.firstIndex(of: before) else {
             return
         }
