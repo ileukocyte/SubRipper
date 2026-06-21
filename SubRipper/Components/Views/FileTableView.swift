@@ -12,6 +12,7 @@ struct FileTableView: View {
     @Binding var showSubtitleInspector: Bool
 
     @State private var selection = Set<SrtEntry.ID>()
+    @State private var showSubtitleOffsetSheet = false
 
     private var selectedEntries: [Binding<SrtEntry>] {
         selection.compactMap { id in
@@ -44,21 +45,65 @@ struct FileTableView: View {
         } rows: {
             ForEach(entries) { entry in
                 TableRow(entry)
-                    .contextMenu {
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(entry.content, forType: .string)
-                        } label: {
-                            Label("Copy Subtitle", systemImage: "doc.on.doc")
-                        }
+            }
+        }
+        .contextMenu(forSelectionType: SrtEntry.ID.self) { selected in
+            let _ = {
+                if selection != selected {
+                    selection = selected
+                }
+            }()
 
-                        Button(role: .destructive) {
-                            
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        .disabled(true)
+            let selectedEntriesMenu: [Binding<SrtEntry>] = selected.compactMap { id in
+                guard let index = entries.firstIndex(where: { entry in
+                    entry.id == id
+                }) else {
+                    return nil
+                }
+
+                return $entries[index]
+            }
+
+            if !selectedEntriesMenu.isEmpty {
+                if selectedEntriesMenu.count == 1, let entry = selectedEntriesMenu.first {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(entry.wrappedValue.content, forType: .string)
+                    } label: {
+                        Label("Copy Subtitle", systemImage: "doc.on.doc")
                     }
+
+                    Divider()
+
+                    Button {
+                        
+                    } label: {
+                        Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
+                    }
+                    .disabled(true)
+
+                    Button {
+                        
+                    } label: {
+                        Label("Insert Above", systemImage: "square.topthird.inset.filled")
+                    }
+                    .disabled(true)
+                    
+                    Divider()
+                }
+
+                Button {
+                    showSubtitleOffsetSheet.toggle()
+                } label: {
+                    Label("Shift Time", systemImage: "timer")
+                }
+
+                Button(role: .destructive) {
+                    
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                .disabled(true)
             }
         }
         .inspector(isPresented: $showSubtitleInspector) {
@@ -77,6 +122,12 @@ struct FileTableView: View {
                 }
                 .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
             }
+        }
+        .sheet(isPresented: $showSubtitleOffsetSheet) {
+            Section(header: Text("Shift Time")) {
+                SubtitleOffsetView(entries: selectedEntries, shouldDismiss: true)
+            }
+            .padding()
         }
     }
 }

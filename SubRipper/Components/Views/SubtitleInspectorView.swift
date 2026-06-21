@@ -93,7 +93,7 @@ struct SubtitleInspectorView: View {
 
             Section(header: Text("Offset")) {
                 LabeledContent {
-                    SubtitleOffsetView(entries: entries)
+                    SubtitleOffsetView(entries: entries, shouldDismiss: false)
                 } label: {
                     
                 }

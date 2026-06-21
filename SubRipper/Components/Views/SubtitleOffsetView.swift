@@ -11,6 +11,9 @@ struct SubtitleOffsetView: View {
     static let formattedDefault = "00:00:00,000"
 
     var entries: [Binding<SrtEntry>]
+    let shouldDismiss: Bool
+
+    @Environment(\.dismiss) var dismiss
 
     @State private var timestamp: TimeInterval = 0
     @State private var formatted: String = Self.formattedDefault
@@ -102,11 +105,15 @@ struct SubtitleOffsetView: View {
         timestamp = 0
         sign = .plus
         formatted = Self.formattedDefault
+
+        if shouldDismiss {
+            dismiss()
+        }
     }
 }
 
 #Preview {
     @Previewable var entries: [Binding<SrtEntry>] = [.constant(SrtEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))]
 
-    SubtitleOffsetView(entries: entries)
+    SubtitleOffsetView(entries: entries, shouldDismiss: false)
 }
