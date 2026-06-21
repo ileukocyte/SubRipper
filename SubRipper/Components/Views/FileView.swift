@@ -35,7 +35,7 @@ struct FileView: View {
                     Button {
                         showSubtitleInspector.toggle()
                     } label: {
-                        Label("Edit Subtitle", systemImage: "pencil")
+                        Label("Subtitle Inspector", systemImage: "sidebar.right")
                     }
                 }
             }

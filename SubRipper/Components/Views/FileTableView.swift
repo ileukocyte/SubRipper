@@ -71,7 +71,7 @@ struct FileTableView: View {
                 .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
             } else {
                 ContentUnavailableView {
-                    Image(systemName: "pencil.and.ellipsis.rectangle")
+                    Image(systemName: "filemenu.and.selection")
                 } description: {
                     Text("Select a subtitle to edit")
                 }

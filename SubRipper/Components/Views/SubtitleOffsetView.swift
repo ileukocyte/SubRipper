@@ -66,18 +66,13 @@ struct SubtitleOffsetView: View {
 
         Divider()
 
-        HStack {
-            Spacer()
-
-            Button("Apply") {
-                applyOffset()
-            }
-            .disabled(!canSave)
-            .buttonBorderShape(.capsule)
-            .buttonStyle(.borderedProminent)
-
-            Spacer()
+        Button("Apply") {
+            applyOffset()
         }
+        .disabled(!canSave)
+        .buttonBorderShape(.capsule)
+        .buttonStyle(.borderedProminent)
+        .frame(maxWidth: .infinity)
     }
 
     private func calculateOffset() -> TimeInterval {

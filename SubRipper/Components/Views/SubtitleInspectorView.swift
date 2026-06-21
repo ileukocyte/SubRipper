@@ -18,29 +18,24 @@ struct SubtitleInspectorView: View {
     var body: some View {
         Form {
             Section {
-                HStack {
-                    Spacer()
+                VStack {
+                    Text("^[\(entries.count) subtitle](inflect: true) selected")
 
-                    VStack {
-                        Text("^[\(entries.count) subtitle](inflect: true) selected")
-
-                        HStack {
-                            Button("Select All") {
-                                selectAll()
-                            }
-                            .buttonStyle(.bordered)
-                            .buttonBorderShape(.capsule)
-
-                            Button("Deselect") {
-                                deselect()
-                            }
-                            .buttonStyle(.bordered)
-                            .buttonBorderShape(.capsule)
+                    HStack {
+                        Button("Select All") {
+                            selectAll()
                         }
-                    }
+                        .buttonStyle(.bordered)
+                        .buttonBorderShape(.capsule)
 
-                    Spacer()
+                        Button("Deselect") {
+                            deselect()
+                        }
+                        .buttonStyle(.bordered)
+                        .buttonBorderShape(.capsule)
+                    }
                 }
+                .frame(maxWidth: .infinity)
             }
 
             if entries.count == 1, let entry = entries.first {

@@ -37,23 +37,18 @@ struct SubtitleTextEditorView: View {
                     draft = newValue.replacing(/\n{2,}/, with: "\n")
                 }
 
-            HStack {
-                Spacer()
-
-                Button("Save") {
-                    draft = draft
-                        .components(separatedBy: "\n")
-                        .map { $0.trimmingCharacters(in: .whitespaces) }
-                        .filter { !$0.isEmpty }
-                        .joined(separator: "\n")
-                    content = draft
-                }
-                .disabled(!canSave)
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.capsule)
-
-                Spacer()
+            Button("Save") {
+                draft = draft
+                    .components(separatedBy: "\n")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "\n")
+                content = draft
             }
+            .disabled(!canSave)
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
+            .frame(maxWidth: .infinity)
         }
     }
 }
