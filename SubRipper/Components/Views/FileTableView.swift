@@ -79,13 +79,17 @@ struct FileTableView: View {
                     Divider()
 
                     Button {
-                        file.insertEntry(after: entry.wrappedValue)
+                        withAnimation {
+                            file.insertEntry(after: entry.wrappedValue)
+                        }
                     } label: {
                         Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
                     }
 
                     Button {
-                        file.insertEntry(before: entry.wrappedValue)
+                        withAnimation {
+                            file.insertEntry(before: entry.wrappedValue)
+                        }
                     } label: {
                         Label("Insert Above", systemImage: "square.topthird.inset.filled")
                     }
@@ -102,7 +106,9 @@ struct FileTableView: View {
                 Divider()
 
                 Button(role: .destructive) {
-                    file.deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
+                    withAnimation {
+                        file.deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
+                    }
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }

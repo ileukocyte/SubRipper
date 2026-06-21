@@ -123,7 +123,9 @@ struct FileCommands: Commands {
                     guard let id = selectedEntries?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
-                    currentFile.insertEntry(after: entry)
+                    withAnimation {
+                        currentFile.insertEntry(after: entry)
+                    }
                 }
                 .disabled(selectedEntries?.wrappedValue.count != 1)
 
@@ -131,7 +133,9 @@ struct FileCommands: Commands {
                     guard let id = selectedEntries?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
-                    currentFile.insertEntry(before: entry)
+                    withAnimation {
+                        currentFile.insertEntry(before: entry)
+                    }
                 }
                 .disabled(selectedEntries?.wrappedValue.count != 1)
 
@@ -157,7 +161,9 @@ struct FileCommands: Commands {
                         return
                     }
 
-                    currentFile.deleteAll(entries: currentFile.entries.filter { selectedEntries.wrappedValue.contains($0.id) })
+                    withAnimation {
+                        currentFile.deleteAll(entries: currentFile.entries.filter { selectedEntries.wrappedValue.contains($0.id) })
+                    }
                 }
                 .keyboardShortcut(.delete, modifiers: .command)
                 .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
