@@ -173,9 +173,7 @@ struct FileTableView: View {
     private func deleteAll(entries toDelete: [SrtEntry]) {
         let indices = toDelete.compactMap { entries.firstIndex(of: $0) }.sorted(by: <)
 
-        for (offset, index) in indices.enumerated() {
-            entries.remove(at: index - offset)
-        }
+        entries.remove(atOffsets: IndexSet(indices))
 
         for i in 0..<entries.count {
             entries[i].index = i + 1

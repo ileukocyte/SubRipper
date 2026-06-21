@@ -75,11 +75,10 @@ struct FileCommands: Commands {
             .disabled(currentFile == nil)
         }
 
-        if currentFile != nil {
+        if let currentFile {
             CommandMenu("Subtitles") {
                 Button("Insert Below", systemImage: "square.bottomthird.inset.filled") {
-                    guard let currentFile,
-                          let id = selectedEntries?.first,
+                    guard let id = selectedEntries?.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     currentFile.insertNew(after: entry)
@@ -87,13 +86,18 @@ struct FileCommands: Commands {
                 .disabled(selectedEntries?.count != 1)
 
                 Button("Insert Above", systemImage: "square.topthird.inset.filled") {
-                    guard let currentFile,
-                          let id = selectedEntries?.first,
+                    guard let id = selectedEntries?.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     currentFile.insertNew(before: entry)
                 }
                 .disabled(selectedEntries?.count != 1)
+
+                Divider()
+
+                Button("Append", systemImage: "plus") {
+                    currentFile.append()
+                }
 
                 Divider()
 
@@ -107,7 +111,7 @@ struct FileCommands: Commands {
                 Divider()
 
                 Button("Delete", systemImage: "trash") {
-                    guard let currentFile, let selectedEntries else {
+                    guard let selectedEntries else {
                         return
                     }
 

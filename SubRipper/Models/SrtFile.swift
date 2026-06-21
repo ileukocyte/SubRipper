@@ -5,7 +5,7 @@
 //  Created by Alexander Oksanich on 6/19/2026.
 //
 
-import Foundation
+import SwiftUI
 
 @Observable
 class SrtFile: Identifiable {
@@ -16,6 +16,17 @@ class SrtFile: Identifiable {
     init(url: URL, entries: [SrtEntry]) {
         self.url = url
         self.entries = entries
+    }
+
+    func append() {
+        let new = SrtEntry(
+            index: (entries.last?.index ?? 0) + 1,
+            startTime: entries.last?.endTime ?? 0,
+            endTime: entries.last?.endTime ?? 0,
+            content: ""
+        )
+
+        entries.append(new)
     }
 
     func insertNew(after: SrtEntry) {
@@ -59,9 +70,7 @@ class SrtFile: Identifiable {
     func deleteAll(entries toDelete: [SrtEntry]) {
         let indices = toDelete.compactMap { entries.firstIndex(of: $0) }.sorted(by: <)
 
-        for (offset, index) in indices.enumerated() {
-            entries.remove(at: index - offset)
-        }
+        entries.remove(atOffsets: IndexSet(indices))
 
         for i in 0..<entries.count {
             entries[i].index = i + 1
