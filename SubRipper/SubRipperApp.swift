@@ -11,6 +11,10 @@ import SwiftUI
 struct SubRipperApp: App {
     @State private var store = SubRipperStore()
 
+    init() {
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
     var body: some Scene {
         Window("SubRipper", id: "startup") {
             StartupView()
@@ -30,12 +34,6 @@ struct SubRipperApp: App {
         WindowGroup("SubRipper", id: "file", for: UUID.self) { $id in
             if let id, let file = store[id] {
                 FileView(file: file)
-                    .onAppear {
-                        DispatchQueue.main.async {
-                            NSApp.maximizeWindow(id: nil)
-                            NSWindow.allowsAutomaticWindowTabbing = false
-                        }
-                    }
             }
         }
         .defaultPosition(.center)

@@ -17,6 +17,7 @@ struct FileView: View {
 
     var body: some View {
         FileTableView(file: file, showSubtitleInspector: $showSubtitleInspector)
+            .background { WindowMaximizer() }
             .focusedSceneValue(\.currentFile, file)
             .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
             .onDisappear {

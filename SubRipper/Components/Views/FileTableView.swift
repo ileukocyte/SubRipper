@@ -108,6 +108,7 @@ struct FileTableView: View {
                 }
             }
         }
+        .copyable(selectedEntries.map(\.wrappedValue.content))
         .inspector(isPresented: $showSubtitleInspector) {
             if !selectedEntries.isEmpty {
                 SubtitleInspectorView(entries: selectedEntries) {

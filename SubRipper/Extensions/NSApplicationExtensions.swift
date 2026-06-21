@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import SwiftUI
 
 extension NSApplication {
     @MainActor
@@ -26,17 +27,21 @@ extension NSApplication {
     func closeWindow(id: String) {
         self.windows.first { $0.identifier?.rawValue == id }?.close()
     }
+}
 
-    @MainActor
-    func maximizeWindow(id: String?) {
-        guard let window = self.windows.first(where: {
-            if let id {
-                return $0.identifier?.rawValue == id
-            }
+struct WindowMaximizer: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
 
-            return $0.isKeyWindow
-        }), let screen = window.screen ?? NSScreen.main else { return }
+        DispatchQueue.main.async {
+            guard let window = view.window,
+                  let screen = window.screen ?? NSScreen.main else { return }
 
-        window.setFrame(screen.visibleFrame, display: true)
+            window.setFrame(screen.visibleFrame, display: true)
+        }
+
+        return view
     }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
