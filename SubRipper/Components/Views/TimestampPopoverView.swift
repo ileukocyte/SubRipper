@@ -12,47 +12,63 @@ struct TimestampPopoverView: View {
 
     @Binding var timestamp: TimeInterval
 
+    @State private var localTimestamp: TimeInterval
     @State private var formatted: String
 
     var heading: String?
 
     init(timestamp: Binding<TimeInterval>, heading: String? = nil) {
         self._timestamp = timestamp
+        self._localTimestamp = State(initialValue: timestamp.wrappedValue)
         self._formatted = State(initialValue: SrtMarshaler.formatTime(timestamp.wrappedValue))
         self.heading = heading
     }
 
     var canSave: Bool {
-        // checks for regex matching as well
-        guard let formatted = addMissingLeadingZeros(to: formatted) else {
+        guard let newTimestamp = try? SrtMarshaler.parseTime(formatted: formatted) else {
             return false
         }
 
-        return SrtMarshaler.formatTime(timestamp) != formatted
+        return timestamp != newTimestamp
     }
 
     var body: some View {
         VStack(spacing: 15) {
             Section {
-                TextField("Timestamp", text: $formatted)
-                    .frame(width: 100)
-                    .onChange(of: formatted) { _, newValue in
-                        formatted = newValue.filter {
-                            $0.isNumber || $0 == ":" || $0 == ","
+                HStack {
+                    TextField("Timestamp", text: $formatted)
+                        .frame(width: 100)
+                        .onChange(of: formatted) { _, newValue in
+                            formatted = newValue.filter {
+                                $0.isNumber || $0 == ":" || $0 == ","
+                            }
+
+                            if let newTimestamp = try? SrtMarshaler.parseTime(formatted: formatted) {
+                                localTimestamp = newTimestamp
+                            }
                         }
-                    }
-                    .onSubmit {
-                        if let time = try? SrtMarshaler.parseTime(formatted: formatted) {
-                            timestamp = time
+                        .onSubmit {
+                            timestamp = localTimestamp
                             dismiss()
                         }
+
+                    Stepper {
+                        
+                    } onIncrement: {
+                        let offsetSeconds = calculateOffset()
+
+                        formatted = SrtMarshaler.formatTime(localTimestamp + offsetSeconds)
+                    } onDecrement: {
+                        let offsetSeconds = calculateOffset()
+
+                        formatted = SrtMarshaler.formatTime(max(0, localTimestamp - offsetSeconds))
                     }
+                }
+                .frame(maxWidth: .infinity)
 
                 Button("Save") {
-                    if let time = try? SrtMarshaler.parseTime(formatted: formatted) {
-                        timestamp = time
-                        dismiss()
-                    }
+                    timestamp = localTimestamp
+                    dismiss()
                 }
                 .disabled(!canSave)
                 .buttonStyle(.borderedProminent)
@@ -67,16 +83,16 @@ struct TimestampPopoverView: View {
         .padding()
     }
 
-    private func addMissingLeadingZeros(to string: String) -> String? {
-        guard let match = try? SrtMarshaler.timestampRegex.wholeMatch(in: string) else {
-            return nil
+    private func calculateOffset() -> TimeInterval {
+        if Keys.allModifiersPressed([.option, .shift]) {
+            60
+        } else if Keys.allModifiersPressed([.shift]) {
+            30
+        } else if Keys.allModifiersPressed([.option]) {
+            15
+        } else {
+            1
         }
-
-        let hours = match.hours.count == 1 ? "0\(match.hours)" : match.hours
-        let minutes = match.minutes.count == 1 ? "0\(match.minutes)" : match.minutes
-        let seconds = match.seconds.count == 1 ? "0\(match.seconds)" : match.seconds
-
-        return "\(hours):\(minutes):\(seconds),\(match.ms)"
     }
 }
 
