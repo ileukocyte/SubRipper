@@ -9,8 +9,11 @@ import SwiftUI
 
 struct FileCommands: Commands {
     @Environment(\.openWindow) private var openWindow
+
     @FocusedValue(\.currentFile) private var currentFile
     @FocusedValue(\.showSubtitleInspector) private var showSubtitleInspector
+    @FocusedValue(\.selectedEntries) private var selectedEntries
+    @FocusedValue(\.showSubtitleOffsetSheet) private var showSubtitleOffsetSheet
 
     var store: SubRipperStore
 
@@ -70,6 +73,49 @@ struct FileCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: .command)
             .disabled(currentFile == nil)
+        }
+
+        if currentFile != nil {
+            CommandMenu("Subtitles") {
+                Button("Insert Below", systemImage: "square.bottomthird.inset.filled") {
+                    guard let currentFile,
+                          let id = selectedEntries?.first,
+                          let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
+
+                    currentFile.insertNew(after: entry)
+                }
+                .disabled(selectedEntries?.count != 1)
+
+                Button("Insert Above", systemImage: "square.topthird.inset.filled") {
+                    guard let currentFile,
+                          let id = selectedEntries?.first,
+                          let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
+
+                    currentFile.insertNew(before: entry)
+                }
+                .disabled(selectedEntries?.count != 1)
+
+                Divider()
+
+                Button("Shift Time", systemImage: "timer") {
+                    if let showSubtitleOffsetSheet {
+                        showSubtitleOffsetSheet.wrappedValue.toggle()
+                    }
+                }
+                .disabled(selectedEntries?.isEmpty ?? true)
+
+                Divider()
+
+                Button("Delete", systemImage: "trash") {
+                    guard let currentFile, let selectedEntries else {
+                        return
+                    }
+
+                    currentFile.deleteAll(entries: currentFile.entries.filter { selectedEntries.contains($0.id) })
+                }
+                .keyboardShortcut(.delete, modifiers: .command)
+                .disabled(selectedEntries?.isEmpty ?? true)
+            }
         }
     }
 }

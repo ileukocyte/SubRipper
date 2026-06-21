@@ -47,6 +47,8 @@ struct FileTableView: View {
                 TableRow(entry)
             }
         }
+        .focusedSceneValue(\.selectedEntries, selection)
+        .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
         .contextMenu(forSelectionType: SrtEntry.ID.self) { selected in
             let _ = {
                 if selection != selected {
@@ -76,19 +78,17 @@ struct FileTableView: View {
                     Divider()
 
                     Button {
-                        
+                        insertNew(after: entry.wrappedValue)
                     } label: {
                         Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
                     }
-                    .disabled(true)
 
                     Button {
-                        
+                        insertNew(before: entry.wrappedValue)
                     } label: {
                         Label("Insert Above", systemImage: "square.topthird.inset.filled")
                     }
-                    .disabled(true)
-                    
+            
                     Divider()
                 }
 
@@ -98,12 +98,13 @@ struct FileTableView: View {
                     Label("Shift Time", systemImage: "timer")
                 }
 
+                Divider()
+
                 Button(role: .destructive) {
-                    
+                    deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
-                .disabled(true)
             }
         }
         .inspector(isPresented: $showSubtitleInspector) {
@@ -128,6 +129,56 @@ struct FileTableView: View {
                 SubtitleOffsetView(entries: selectedEntries, shouldDismiss: true)
             }
             .padding()
+        }
+    }
+
+    private func insertNew(after: SrtEntry) {
+        guard let index = entries.firstIndex(of: after) else {
+            return
+        }
+
+        let new = SrtEntry(
+            index: after.index,
+            startTime: after.endTime,
+            endTime: after.endTime,
+            content: ""
+        )
+
+        entries.insert(new, at: index + 1)
+
+        for i in 0..<entries.count {
+            entries[i].index = i + 1
+        }
+    }
+
+    private func insertNew(before: SrtEntry) {
+        guard let index = entries.firstIndex(of: before) else {
+            return
+        }
+
+        let new = SrtEntry(
+            index: before.index,
+            startTime: before.startTime,
+            endTime: before.startTime,
+            content: ""
+        )
+
+        entries.insert(new, at: index)
+
+        for i in 0..<entries.count {
+            entries[i].index = i + 1
+        }
+    }
+
+    private func deleteAll(entries toDelete: [SrtEntry]) {
+        let indices = toDelete.compactMap { entries.firstIndex(of: $0) }.sorted(by: <)
+
+        for (offset, index) in indices.enumerated() {
+            entries.remove(at: index - offset)
+        }
+
+        for i in 0..<entries.count {
+            entries[i].index = i + 1
         }
     }
 }
