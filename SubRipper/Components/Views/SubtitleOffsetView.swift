@@ -69,12 +69,22 @@ struct SubtitleOffsetView: View {
 
         Divider()
 
-        Button("Apply") {
-            applyOffset()
+        HStack {
+            if shouldDismiss {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .buttonBorderShape(.capsule)
+                .buttonStyle(.bordered)
+            }
+
+            Button("Apply") {
+                applyOffset()
+            }
+            .disabled(!canSave)
+            .buttonBorderShape(.capsule)
+            .buttonStyle(.borderedProminent)
         }
-        .disabled(!canSave)
-        .buttonBorderShape(.capsule)
-        .buttonStyle(.borderedProminent)
         .frame(maxWidth: .infinity)
     }
 
