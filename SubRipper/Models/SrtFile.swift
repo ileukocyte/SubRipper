@@ -78,4 +78,8 @@ class SrtFile: Identifiable {
             entries[i].index = i + 1
         }
     }
+
+    func deleteAll(where predicate: (SrtEntry) -> Bool) {
+        deleteAll(entries: entries.filter(predicate))
+    }
 }

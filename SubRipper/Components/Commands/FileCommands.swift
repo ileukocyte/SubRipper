@@ -162,7 +162,7 @@ struct FileCommands: Commands {
                     }
 
                     withAnimation {
-                        currentFile.deleteAll(entries: currentFile.entries.filter { selectedEntries.wrappedValue.contains($0.id) })
+                        currentFile.deleteAll { selectedEntries.wrappedValue.contains($0.id) }
                     }
                 }
                 .keyboardShortcut(.delete, modifiers: .command)
