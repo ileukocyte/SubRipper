@@ -11,7 +11,7 @@ struct FileView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
 
-    var file: SrtFile
+    @Bindable var file: SrtFile
 
     @State private var showSubtitleInspector = true
 
