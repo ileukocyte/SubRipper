@@ -31,7 +31,7 @@ struct StartupView: View {
                         .foregroundStyle(.secondary)
                         
                     Button("Open", systemImage: "arrow.up.forward") {
-                        showFileImporter = true
+                        showFileImporter.toggle()
                     }
                     .buttonStyle(.glassProminent)
                     .tint(.accentColor)
@@ -52,45 +52,64 @@ struct StartupView: View {
         .fileImporter(
             isPresented: $showFileImporter,
             allowedContentTypes: [.srt],
+            allowsMultipleSelection: true
         ) { result in
             switch result {
-            case .success(let url):
-                let accessed = url.startAccessingSecurityScopedResource()
+            case .success(let urls):
+                var isStartupOpen = true
 
-                do {
-                    let file = try store.load(url: url)
+                for url in urls {
+                    let accessed = url.startAccessingSecurityScopedResource()
 
-                    NSApp.closeWindow(id: "startup")
-                    openWindow(id: "file", value: file.id)
-                } catch {
-                    if accessed {
-                        url.stopAccessingSecurityScopedResource()
+                    do {
+                        let file = try store.load(url: url)
+
+                        if isStartupOpen {
+                            NSApp.closeWindow(id: "startup")
+                            isStartupOpen = false
+                        }
+
+                        openWindow(id: "file", value: file.id)
+                    } catch {
+                        if accessed {
+                            url.stopAccessingSecurityScopedResource()
+                        }
+
+                        Alerts.showDefaultErrorAlert(for: error)
                     }
-
-                    Alerts.showDefaultErrorAlert(for: error)
                 }
             case .failure(let error):
                 Alerts.showDefaultErrorAlert(for: error)
             }
         }
         .dropDestination(for: URL.self) { items, _ in
-            guard let url = items.first(where: { $0.pathExtension.lowercased() == "srt" }) else {
+            let urls = items.filter { $0.pathExtension.lowercased() == "srt" }
+
+            if urls.isEmpty {
                 return
             }
 
-            let accessed = url.startAccessingSecurityScopedResource()
+            var isStartupOpen = true
 
-            do {
-                let file = try store.load(url: url)
+            for url in urls {
+                let accessed = url.startAccessingSecurityScopedResource()
+                
+                do {
+                    let file = try store.load(url: url)
 
-                NSApp.closeWindow(id: "startup")
-                openWindow(id: "file", value: file.id)
-            } catch {
-                if accessed {
-                    url.stopAccessingSecurityScopedResource()
+                    if isStartupOpen {
+                        NSApp.closeWindow(id: "startup")
+                        isStartupOpen = false
+                    }
+
+                    openWindow(id: "file", value: file.id)
+                } catch {
+                    if accessed {
+                        url.stopAccessingSecurityScopedResource()
+                    }
+                    
+                    Alerts.showDefaultErrorAlert(for: error)
                 }
-
-                Alerts.showDefaultErrorAlert(for: error)
             }
         }
     }

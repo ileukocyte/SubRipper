@@ -38,27 +38,37 @@ struct FileCommands: Commands {
             Button("Open...", systemImage: "arrow.up.right.square") {
                 let panel = NSOpenPanel()
                 panel.allowedContentTypes = [.srt]
-                panel.allowsMultipleSelection = false
+                panel.allowsMultipleSelection = true
                 panel.canChooseDirectories = false
 
-                if panel.runModal() == .OK, let url = panel.url {
-                    let accessed = url.startAccessingSecurityScopedResource()
+                if panel.runModal() == .OK {
+                    var isStartupOpen = true
 
-                    do {
-                        let file = try store.load(url: url)
+                    for url in panel.urls {
+                        let accessed = url.startAccessingSecurityScopedResource()
 
-                        NSApp.closeWindow(id: "startup")
-                        openWindow(id: "file", value: file.id)
-                    } catch {
-                        if accessed {
-                            url.stopAccessingSecurityScopedResource()
+                        do {
+                            let file = try store.load(url: url)
+
+                            if isStartupOpen {
+                                NSApp.closeWindow(id: "startup")
+                                isStartupOpen = false
+                            }
+
+                            openWindow(id: "file", value: file.id)
+                        } catch {
+                            if accessed {
+                                url.stopAccessingSecurityScopedResource()
+                            }
+
+                            Alerts.showDefaultErrorAlert(for: error)
                         }
-
-                        Alerts.showDefaultErrorAlert(for: error)
                     }
                 }
             }
             .keyboardShortcut("o", modifiers: .command)
+
+            Divider()
 
             Button("Save", systemImage: "square.and.arrow.down") {
                 guard let file = currentFile else {
@@ -73,6 +83,38 @@ struct FileCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: .command)
             .disabled(currentFile == nil)
+            .modifierKeyAlternate(.option) {
+                Button("Save As...", systemImage: "square.and.arrow.down") {
+                    guard let file = currentFile else {
+                        return
+                    }
+
+                    let panel = NSSavePanel()
+                    panel.allowedContentTypes = [.srt]
+                    panel.directoryURL = file.url.deletingLastPathComponent()
+                    panel.nameFieldStringValue = file.url.lastPathComponent
+                    panel.canCreateDirectories = true
+
+                    if panel.runModal() == .OK, let url = panel.url {
+                        do {
+                            try store.export(file: file, to: url)
+                        } catch {
+                            Alerts.showDefaultErrorAlert(for: error)
+                        }
+                    }
+                }
+                .disabled(currentFile == nil)
+            }
+            .modifierKeyAlternate([.option, .shift]) {
+                Button("Save All", systemImage: "square.and.arrow.down") {
+                    do {
+                        try store.exportAll()
+                    } catch {
+                        Alerts.showDefaultErrorAlert(for: error)
+                    }
+                }
+                .disabled(currentFile == nil)
+            }
         }
 
         if let currentFile {
