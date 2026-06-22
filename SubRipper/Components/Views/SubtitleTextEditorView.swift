@@ -17,7 +17,7 @@ struct SubtitleTextEditorView: View {
         self._draft = State(initialValue: content.wrappedValue)
     }
 
-    var canSave: Bool {
+    private var canSave: Bool {
         let draftTrimmed = draft
             .components(separatedBy: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }

@@ -24,7 +24,7 @@ struct TimestampPopoverView: View {
         self.heading = heading
     }
 
-    var canSave: Bool {
+    private var canSave: Bool {
         guard let newTimestamp = try? SrtMarshaler.parseTime(formatted: formatted) else {
             return false
         }

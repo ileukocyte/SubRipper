@@ -8,21 +8,20 @@
 import SwiftUI
 
 struct FileCommands: Commands {
+    var store: SubRipperStore
+
     @Environment(\.openWindow) private var openWindow
 
     @FocusedValue(\.currentFile) private var currentFile
     @FocusedValue(\.showSubtitleInspector) private var showSubtitleInspector
     @FocusedValue(\.selectedEntries) private var selectedEntries
     @FocusedValue(\.showSubtitleOffsetSheet) private var showSubtitleOffsetSheet
-
-    var store: SubRipperStore
+    @FocusedValue(\.showLinearCorrectionSheet) private var showLinearCorrectionSheet
 
     var body: some Commands {
         CommandGroup(before: .sidebar) {
             Button {
-                if let showSubtitleInspector {
-                    showSubtitleInspector.wrappedValue.toggle()
-                }
+                showSubtitleInspector?.wrappedValue.toggle()
             } label: {
                 let isExpanded = showSubtitleInspector?.wrappedValue ?? false
 
@@ -148,11 +147,15 @@ struct FileCommands: Commands {
                 Divider()
 
                 Button("Shift Time", systemImage: "timer") {
-                    if let showSubtitleOffsetSheet {
-                        showSubtitleOffsetSheet.wrappedValue.toggle()
-                    }
+                    showSubtitleOffsetSheet?.wrappedValue.toggle()
                 }
                 .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
+
+                Button("Linear Correction", systemImage: "graph.2d") {
+                    showLinearCorrectionSheet?.wrappedValue.toggle()
+                }
+                .disabled(currentFile.entries.count < 2
+                          || currentFile.entries.count != selectedEntries?.wrappedValue.count)
 
                 Divider()
 

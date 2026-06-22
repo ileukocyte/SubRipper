@@ -12,4 +12,5 @@ extension FocusedValues {
     @Entry var showSubtitleInspector: Binding<Bool>? = nil
     @Entry var selectedEntries: Binding<Set<SrtEntry.ID>>? = nil
     @Entry var showSubtitleOffsetSheet: Binding<Bool>? = nil
+    @Entry var showLinearCorrectionSheet: Binding<Bool>? = nil
 }

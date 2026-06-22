@@ -13,6 +13,8 @@ enum SrtMarshaler {
     static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>[0-5]\d):(?<startSeconds>[0-5]\d),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>[0-5]\d):(?<endSeconds>[0-5]\d),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/
         .anchorsMatchLineEndings()
 
+    static let defaultFormattedTimestamp = "00:00:00,000"
+
     static func parseTime(formatted: String) throws -> TimeInterval {
         guard let match = try? timestampRegex.wholeMatch(in: formatted) else {
             throw SrtParseError.invalidTimeComponent(formatted)

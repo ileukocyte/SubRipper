@@ -8,18 +8,16 @@
 import SwiftUI
 
 struct SubtitleOffsetView: View {
-    static let formattedDefault = "00:00:00,000"
-
     var entries: [Binding<SrtEntry>]
     let shouldDismiss: Bool
 
     @Environment(\.dismiss) var dismiss
 
     @State private var timestamp: TimeInterval = 0
-    @State private var formatted: String = Self.formattedDefault
+    @State private var formatted: String = SrtMarshaler.defaultFormattedTimestamp
     @State private var sign: FloatingPointSign = .plus
 
-    var canSave: Bool {
+    private var canSave: Bool {
         guard let _ = try? SrtMarshaler.timestampRegex.wholeMatch(in: formatted) else {
             return false
         }
@@ -114,7 +112,7 @@ struct SubtitleOffsetView: View {
 
         timestamp = 0
         sign = .plus
-        formatted = Self.formattedDefault
+        formatted = SrtMarshaler.defaultFormattedTimestamp
 
         if shouldDismiss {
             dismiss()

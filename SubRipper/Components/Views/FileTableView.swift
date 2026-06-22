@@ -14,6 +14,7 @@ struct FileTableView: View {
 
     @State private var selection = Set<SrtEntry.ID>()
     @State private var showSubtitleOffsetSheet = false
+    @State private var showLinearCorrectionSheet = false
 
     private var selectedEntries: [Binding<SrtEntry>] {
         selection.compactMap { id in
@@ -50,6 +51,7 @@ struct FileTableView: View {
         }
         .focusedSceneValue(\.selectedEntries, $selection)
         .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
+        .focusedSceneValue(\.showLinearCorrectionSheet, $showLinearCorrectionSheet)
         .contextMenu(forSelectionType: SrtEntry.ID.self) { selected in
             let _ = {
                 if selection != selected {
@@ -133,10 +135,24 @@ struct FileTableView: View {
             }
         }
         .sheet(isPresented: $showSubtitleOffsetSheet) {
-            Section(header: Text("Shift Time")) {
+            Section {
                 SubtitleOffsetView(entries: selectedEntries, shouldDismiss: true)
+            } header: {
+                Text("Shift Time")
+                    .font(.headline)
             }
             .padding()
+            .frame(minWidth: 300, maxWidth: 300)
+        }
+        .sheet(isPresented: $showLinearCorrectionSheet) {
+            Section {
+                LinearCorrectionSheetView(file: file)
+            } header: {
+                Text("Linear Correction")
+                    .font(.headline)
+            }
+            .padding()
+            .frame(minWidth: 600, maxWidth: 600)
         }
     }
 }
