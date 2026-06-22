@@ -82,4 +82,25 @@ class SrtFile: Identifiable {
     func deleteAll(where predicate: (SrtEntry) -> Bool) {
         deleteAll(entries: entries.filter(predicate))
     }
+
+    func applyLinearCorrection(
+        startTime correctedStartTime: TimeInterval,
+        endTime correctedEndTime: TimeInterval
+    ) {
+        guard entries.count >= 2,
+              let first = entries.first,
+              let last = entries.last,
+              last.endTime != first.startTime
+        else {
+            return
+        }
+
+        let scale = (correctedEndTime - correctedStartTime) / (last.endTime - first.startTime)
+        let offset = correctedStartTime - scale * first.startTime
+
+        for (i, entry) in entries.enumerated() {
+            entries[i].startTime = entry.startTime * scale + offset
+            entries[i].endTime = entry.endTime * scale + offset
+        }
+    }
 }

@@ -152,10 +152,10 @@ struct FileCommands: Commands {
                 .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
 
                 Button("Linear Correction", systemImage: "graph.2d") {
+                    selectedEntries?.wrappedValue.removeAll()
                     showLinearCorrectionSheet?.wrappedValue.toggle()
                 }
-                .disabled(currentFile.entries.count < 2
-                          || currentFile.entries.count != selectedEntries?.wrappedValue.count)
+                .disabled(currentFile.entries.count < 2)
 
                 Divider()
 

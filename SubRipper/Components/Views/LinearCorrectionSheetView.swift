@@ -137,7 +137,7 @@ struct LinearCorrectionSheetView: View {
             .buttonStyle(.bordered)
 
             Button("Apply") {
-                applyLinearCorrection()
+                file.applyLinearCorrection(startTime: startTime, endTime: endTime)
                 dismiss()
             }
             .disabled(!canSave)
@@ -145,23 +145,6 @@ struct LinearCorrectionSheetView: View {
             .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity)
-    }
-
-    private func applyLinearCorrection() {
-        guard let first = file.entries.first,
-              let last = file.entries.last,
-              last.endTime != first.startTime
-        else {
-            return
-        }
-
-        let scale = (endTime - startTime) / (last.endTime - first.startTime)
-        let offset = startTime - scale * first.startTime
-
-        for (i, entry) in file.entries.enumerated() {
-            file.entries[i].startTime = entry.startTime * scale + offset
-            file.entries[i].endTime = entry.endTime * scale + offset
-        }
     }
 }
 
