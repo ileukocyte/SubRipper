@@ -35,19 +35,14 @@ struct FileCommands: Commands {
 
         CommandGroup(replacing: .newItem) {
             Button("Open...", systemImage: "arrow.up.right.square") {
-                let panel = NSOpenPanel()
-                panel.allowedContentTypes = [.srt]
-                panel.allowsMultipleSelection = true
-                panel.canChooseDirectories = false
-
-                if panel.runModal() == .OK {
+                FilePanels.openNSOpenPanel { urls, encoding in
                     var isStartupOpen = true
 
-                    for url in panel.urls {
+                    for url in urls {
                         let accessed = url.startAccessingSecurityScopedResource()
 
                         do {
-                            let file = try store.load(url: url)
+                            let file = try store.load(url: url, encoding: encoding)
 
                             if isStartupOpen {
                                 NSApp.closeWindow(id: "startup")
@@ -88,13 +83,7 @@ struct FileCommands: Commands {
                         return
                     }
 
-                    let panel = NSSavePanel()
-                    panel.allowedContentTypes = [.srt]
-                    panel.directoryURL = file.url.deletingLastPathComponent()
-                    panel.nameFieldStringValue = file.url.lastPathComponent
-                    panel.canCreateDirectories = true
-
-                    if panel.runModal() == .OK, let url = panel.url {
+                    FilePanels.openNSSavePanel(for: file.url) { url in
                         do {
                             try store.export(file: file, to: url)
                         } catch {

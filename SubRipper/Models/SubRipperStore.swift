@@ -20,12 +20,12 @@ class SubRipperStore {
         openFiles.first { $0.url == url }
     }
 
-    func load(url: URL) throws -> SrtFile {
+    func load(url: URL, encoding: String.Encoding = .utf8) throws -> SrtFile {
         if let file = self[url] {
             return file
         }
 
-        let content = try String(contentsOf: url, encoding: .utf8)
+        let content = try String(contentsOf: url, encoding: encoding)
         let entries = try SrtMarshaler.unmarshal(from: content)
         let file = SrtFile(url: url, entries: entries, originalContent: content)
 

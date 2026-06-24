@@ -12,8 +12,6 @@ struct StartupView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
 
-    @State private var showFileImporter = false
-
     var body: some View {
         ZStack {
             VStack(spacing: 12) {
@@ -31,7 +29,30 @@ struct StartupView: View {
                         .foregroundStyle(.secondary)
                         
                     Button("Open", systemImage: "arrow.up.forward") {
-                        showFileImporter.toggle()
+                        FilePanels.openNSOpenPanel { urls, encoding in
+                            var isStartupOpen = true
+
+                            for url in urls {
+                                let accessed = url.startAccessingSecurityScopedResource()
+
+                                do {
+                                    let file = try store.load(url: url, encoding: encoding)
+
+                                    if isStartupOpen {
+                                        NSApp.closeWindow(id: "startup")
+                                        isStartupOpen = false
+                                    }
+
+                                    openWindow(id: "file", value: file.id)
+                                } catch {
+                                    if accessed {
+                                        url.stopAccessingSecurityScopedResource()
+                                    }
+
+                                    Alerts.showDefaultErrorAlert(for: error)
+                                }
+                            }
+                        }
                     }
                     .buttonStyle(.glassProminent)
                     .tint(.accentColor)
@@ -49,39 +70,6 @@ struct StartupView: View {
         .windowMinimizeBehavior(.disabled)
         .windowResizeBehavior(.disabled)
         .background(.ultraThinMaterial)
-        .fileImporter(
-            isPresented: $showFileImporter,
-            allowedContentTypes: [.srt],
-            allowsMultipleSelection: true
-        ) { result in
-            switch result {
-            case .success(let urls):
-                var isStartupOpen = true
-
-                for url in urls {
-                    let accessed = url.startAccessingSecurityScopedResource()
-
-                    do {
-                        let file = try store.load(url: url)
-
-                        if isStartupOpen {
-                            NSApp.closeWindow(id: "startup")
-                            isStartupOpen = false
-                        }
-
-                        openWindow(id: "file", value: file.id)
-                    } catch {
-                        if accessed {
-                            url.stopAccessingSecurityScopedResource()
-                        }
-
-                        Alerts.showDefaultErrorAlert(for: error)
-                    }
-                }
-            case .failure(let error):
-                Alerts.showDefaultErrorAlert(for: error)
-            }
-        }
         .dropDestination(for: URL.self) { items, _ in
             let urls = items.filter { $0.pathExtension.lowercased() == "srt" }
 
