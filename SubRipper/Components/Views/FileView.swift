@@ -20,49 +20,51 @@ struct FileView: View {
             .background { WindowMaximizer() }
             .background {
                 ClosingWindowInterceptor {
-                    let content = SrtMarshaler.marshal(file.entries)
-                    var shouldClose = content == file.originalContent
+                    let marshaled = SrtMarshaler.marshal(file.entries)
 
-                    if !shouldClose {
-                        let alert = NSAlert()
-                        alert.messageText = "Do you want to save the changes?"
-                        alert.alertStyle = .warning
-
-                        let (_, discard, _) = (
-                            alert.addButton(withTitle: "Save"),
-                            alert.addButton(withTitle: "Don't Save"),
-                            alert.addButton(withTitle: "Cancel")
-                        )
-                        discard.hasDestructiveAction = true
-
-                        switch alert.runModal() {
-                        case .alertFirstButtonReturn:
-                            do {
-                                try store.export(file: file)
-                            } catch {
-                                Alerts.showDefaultErrorAlert(for: error)
-                            }
-
-                            shouldClose = true
-                        case .alertSecondButtonReturn:
-                            shouldClose = true
-                        case .alertThirdButtonReturn:
-                            shouldClose = false
-                        default:
-                            shouldClose = true
-                        }
-                    }
-
-                    if shouldClose {
+                    guard marshaled != file.originalContent else {
                         file.url.stopAccessingSecurityScopedResource()
                         store.remove(id: file.id)
 
                         if !store.hasOpenFiles {
                             openWindow(id: "startup")
                         }
+
+                        return true
                     }
 
-                    return shouldClose
+                    let alert = NSAlert()
+                    alert.messageText = "Do you want to save the changes?"
+                    alert.alertStyle = .warning
+
+                    let (_, discard, _) = (
+                        alert.addButton(withTitle: "Save"),
+                        alert.addButton(withTitle: "Don't Save"),
+                        alert.addButton(withTitle: "Cancel")
+                    )
+                    discard.hasDestructiveAction = true
+
+                    switch alert.runModal() {
+                    case .alertFirstButtonReturn:
+                        do {
+                            try store.export(file: file)
+                        } catch {
+                            Alerts.showDefaultErrorAlert(for: error)
+                        }
+
+                        fallthrough
+                    case .alertSecondButtonReturn:
+                        file.url.stopAccessingSecurityScopedResource()
+                        store.remove(id: file.id)
+
+                        if !store.hasOpenFiles {
+                            openWindow(id: "startup")
+                        }
+
+                        return true
+                    default:
+                        return false
+                    }
                 }
             }
             .focusedSceneValue(\.currentFile, file)
