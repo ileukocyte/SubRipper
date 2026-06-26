@@ -45,3 +45,37 @@ struct WindowMaximizer: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSView, context: Context) {}
 }
+
+struct ClosingWindowInterceptor: NSViewRepresentable {
+    var onClose: () -> Bool
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+
+        DispatchQueue.main.async {
+            view.window?.delegate = context.coordinator
+        }
+
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.parent = self
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    class Coordinator: NSObject, NSWindowDelegate {
+        var parent: ClosingWindowInterceptor
+
+        init(parent: ClosingWindowInterceptor) {
+            self.parent = parent
+        }
+
+        func windowShouldClose(_ sender: NSWindow) -> Bool {
+            parent.onClose()
+        }
+    }
+}

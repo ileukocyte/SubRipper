@@ -18,16 +18,55 @@ struct FileView: View {
     var body: some View {
         FileTableView(file: file, showSubtitleInspector: $showSubtitleInspector)
             .background { WindowMaximizer() }
-            .focusedSceneValue(\.currentFile, file)
-            .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
-            .onDisappear {
-                file.url.stopAccessingSecurityScopedResource()
-                store.remove(id: file.id)
+            .background {
+                ClosingWindowInterceptor {
+                    let content = SrtMarshaler.marshal(file.entries)
+                    var shouldClose = content == file.originalContent
 
-                if !store.hasOpenFiles {
-                    openWindow(id: "startup")
+                    if !shouldClose {
+                        let alert = NSAlert()
+                        alert.messageText = "Do you want to save the changes?"
+                        alert.alertStyle = .warning
+
+                        let (_, discard, _) = (
+                            alert.addButton(withTitle: "Save"),
+                            alert.addButton(withTitle: "Don't Save"),
+                            alert.addButton(withTitle: "Cancel")
+                        )
+                        discard.hasDestructiveAction = true
+
+                        switch alert.runModal() {
+                        case .alertFirstButtonReturn:
+                            do {
+                                try store.export(file: file)
+                            } catch {
+                                Alerts.showDefaultErrorAlert(for: error)
+                            }
+
+                            shouldClose = true
+                        case .alertSecondButtonReturn:
+                            shouldClose = true
+                        case .alertThirdButtonReturn:
+                            shouldClose = false
+                        default:
+                            shouldClose = true
+                        }
+                    }
+
+                    if shouldClose {
+                        file.url.stopAccessingSecurityScopedResource()
+                        store.remove(id: file.id)
+
+                        if !store.hasOpenFiles {
+                            openWindow(id: "startup")
+                        }
+                    }
+
+                    return shouldClose
                 }
             }
+            .focusedSceneValue(\.currentFile, file)
+            .focusedSceneValue(\.showSubtitleInspector, $showSubtitleInspector)
             .navigationTitle(file.url.lastPathComponent)
             .navigationDocument(file.url)
             .frame(minWidth: 800, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
