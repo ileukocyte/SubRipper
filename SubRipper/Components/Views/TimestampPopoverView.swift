@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TimestampPopoverView: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
     @Binding var timestamp: TimeInterval
 
@@ -20,12 +20,12 @@ struct TimestampPopoverView: View {
     init(timestamp: Binding<TimeInterval>, heading: String? = nil) {
         self._timestamp = timestamp
         self._localTimestamp = State(initialValue: timestamp.wrappedValue)
-        self._formatted = State(initialValue: SrtMarshaler.formatTime(timestamp.wrappedValue))
+        self._formatted = State(initialValue: SRTMarshaler.formatTime(timestamp.wrappedValue))
         self.heading = heading
     }
 
     private var canSave: Bool {
-        guard let newTimestamp = try? SrtMarshaler.parseTime(formatted: formatted) else {
+        guard let newTimestamp = try? SRTMarshaler.parseTime(formatted: formatted) else {
             return false
         }
 
@@ -43,7 +43,7 @@ struct TimestampPopoverView: View {
                                 $0.isNumber || $0 == ":" || $0 == ","
                             }
 
-                            if let newTimestamp = try? SrtMarshaler.parseTime(formatted: formatted) {
+                            if let newTimestamp = try? SRTMarshaler.parseTime(formatted: formatted) {
                                 localTimestamp = newTimestamp
                             }
                         }
@@ -60,11 +60,11 @@ struct TimestampPopoverView: View {
                     } onIncrement: {
                         let offsetSeconds = calculateOffset()
 
-                        formatted = SrtMarshaler.formatTime(localTimestamp + offsetSeconds)
+                        formatted = SRTMarshaler.formatTime(localTimestamp + offsetSeconds)
                     } onDecrement: {
                         let offsetSeconds = calculateOffset()
 
-                        formatted = SrtMarshaler.formatTime(max(0, localTimestamp - offsetSeconds))
+                        formatted = SRTMarshaler.formatTime(max(0, localTimestamp - offsetSeconds))
                     }
                 }
                 .frame(maxWidth: .infinity)

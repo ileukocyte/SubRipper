@@ -11,16 +11,16 @@ struct LinearCorrectionSheetView: View {
     private var initialStartTime: TimeInterval = 0
     private var initialEndTime: TimeInterval = 0
 
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
-    @Bindable var file: SrtFile
+    @Bindable var file: SRTFile
 
     @State private var startTime: TimeInterval
     @State private var endTime: TimeInterval
     @State private var startTimePopover = false
     @State private var endTimePopover = false
 
-    init(file: SrtFile) {
+    init(file: SRTFile) {
         self.file = file
 
         if let startTime = file.entries.first?.startTime {
@@ -56,13 +56,13 @@ struct LinearCorrectionSheetView: View {
                 Form {
                     Section(header: Text("Current")) {
                         LabeledContent("File Start") {
-                            Text(SrtMarshaler.formatTime(initialStartTime))
+                            Text(SRTMarshaler.formatTime(initialStartTime))
                                 .textSelection(.enabled)
                                 .fontDesign(.monospaced)
                         }
 
                         LabeledContent("File End") {
-                            Text(SrtMarshaler.formatTime(initialEndTime))
+                            Text(SRTMarshaler.formatTime(initialEndTime))
                                 .textSelection(.enabled)
                                 .fontDesign(.monospaced)
                         }
@@ -82,7 +82,7 @@ struct LinearCorrectionSheetView: View {
                             startTimePopover.toggle()
                         } label: {
                             LabeledContent("File Start") {
-                                Text(SrtMarshaler.formatTime(startTime))
+                                Text(SRTMarshaler.formatTime(startTime))
                                     .fontDesign(.monospaced)
                             }
                             .contentShape(.rect)
@@ -103,7 +103,7 @@ struct LinearCorrectionSheetView: View {
                             endTimePopover.toggle()
                         } label: {
                             LabeledContent("File End") {
-                                Text(SrtMarshaler.formatTime(endTime))
+                                Text(SRTMarshaler.formatTime(endTime))
                                     .fontDesign(.monospaced)
                             }
                             .contentShape(.rect)
@@ -187,9 +187,9 @@ What do you mean?
 
     Section {
         LinearCorrectionSheetView(
-            file: SrtFile(
+            file: SRTFile(
                 url: url,
-                entries: try! SrtMarshaler.unmarshal(from: content),
+                entries: try! SRTMarshaler.unmarshal(from: content),
                 originalContent: content
             )
         )

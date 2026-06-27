@@ -8,17 +8,17 @@
 import SwiftUI
 
 struct SubtitleOffsetView: View {
-    var entries: [Binding<SrtEntry>]
+    var entries: [Binding<SRTEntry>]
     let shouldDismiss: Bool
 
     @Environment(\.dismiss) var dismiss
 
     @State private var timestamp: TimeInterval = 0
-    @State private var formatted: String = SrtMarshaler.defaultFormattedTimestamp
+    @State private var formatted: String = SRTMarshaler.defaultFormattedTimestamp
     @State private var sign: FloatingPointSign = .plus
 
     private var canSave: Bool {
-        guard let _ = try? SrtMarshaler.timestampRegex.wholeMatch(in: formatted) else {
+        guard let _ = try? SRTMarshaler.timestampRegex.wholeMatch(in: formatted) else {
             return false
         }
 
@@ -42,7 +42,7 @@ struct SubtitleOffsetView: View {
                         $0.isNumber || $0 == ":" || $0 == ","
                     }
 
-                    if let newTimestamp = try? SrtMarshaler.parseTime(formatted: formatted) {
+                    if let newTimestamp = try? SRTMarshaler.parseTime(formatted: formatted) {
                         timestamp = newTimestamp
                     }
                 }
@@ -57,11 +57,11 @@ struct SubtitleOffsetView: View {
             } onIncrement: {
                 let offsetSeconds = calculateOffset()
 
-                formatted = SrtMarshaler.formatTime(timestamp + offsetSeconds)
+                formatted = SRTMarshaler.formatTime(timestamp + offsetSeconds)
             } onDecrement: {
                 let offsetSeconds = calculateOffset()
 
-                formatted = SrtMarshaler.formatTime(max(0, timestamp - offsetSeconds))
+                formatted = SRTMarshaler.formatTime(max(0, timestamp - offsetSeconds))
             }
         }
 
@@ -112,7 +112,7 @@ struct SubtitleOffsetView: View {
 
         timestamp = 0
         sign = .plus
-        formatted = SrtMarshaler.defaultFormattedTimestamp
+        formatted = SRTMarshaler.defaultFormattedTimestamp
 
         if shouldDismiss {
             dismiss()
@@ -121,7 +121,7 @@ struct SubtitleOffsetView: View {
 }
 
 #Preview {
-    @Previewable var entries: [Binding<SrtEntry>] = [.constant(SrtEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))]
+    @Previewable var entries: [Binding<SRTEntry>] = [.constant(SRTEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))]
 
     SubtitleOffsetView(entries: entries, shouldDismiss: false)
 }

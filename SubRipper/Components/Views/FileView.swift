@@ -11,7 +11,7 @@ struct FileView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(SubRipperStore.self) private var store
 
-    @Bindable var file: SrtFile
+    @Bindable var file: SRTFile
 
     @State private var showSubtitleInspector = true
 
@@ -20,7 +20,7 @@ struct FileView: View {
             .background { WindowMaximizer() }
             .background {
                 ClosingWindowInterceptor {
-                    let marshaled = SrtMarshaler.marshal(file.entries)
+                    let marshaled = SRTMarshaler.marshal(file.entries)
 
                     guard marshaled != file.originalContent else {
                         file.url.stopAccessingSecurityScopedResource()
@@ -121,9 +121,9 @@ all dressed up?
 What do you mean?
 """
 
-    FileView(file: SrtFile(
+    FileView(file: SRTFile(
         url: url,
-        entries: try! SrtMarshaler.unmarshal(from: content),
+        entries: try! SRTMarshaler.unmarshal(from: content),
         originalContent: content
     ))
     .environment(SubRipperStore())

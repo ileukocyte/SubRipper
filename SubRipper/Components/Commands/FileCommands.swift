@@ -13,8 +13,8 @@ struct FileCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     @FocusedValue(\.currentFile) private var currentFile
+    @FocusedValue(\.entrySelection) private var entrySelection
     @FocusedValue(\.showSubtitleInspector) private var showSubtitleInspector
-    @FocusedValue(\.selectedEntries) private var selectedEntries
     @FocusedValue(\.showSubtitleOffsetSheet) private var showSubtitleOffsetSheet
     @FocusedValue(\.showLinearCorrectionSheet) private var showLinearCorrectionSheet
 
@@ -108,7 +108,7 @@ struct FileCommands: Commands {
         if let currentFile {
             CommandMenu("Subtitles") {
                 Button("Insert Below", systemImage: "square.bottomthird.inset.filled") {
-                    guard let id = selectedEntries?.wrappedValue.first,
+                    guard let id = entrySelection?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     withAnimation {
@@ -116,13 +116,13 @@ struct FileCommands: Commands {
                             return
                         }
 
-                        selectedEntries?.wrappedValue = [newEntry.id]
+                        entrySelection?.wrappedValue = [newEntry.id]
                     }
                 }
-                .disabled(selectedEntries?.wrappedValue.count != 1)
+                .disabled(entrySelection?.wrappedValue.count != 1)
 
                 Button("Insert Above", systemImage: "square.topthird.inset.filled") {
-                    guard let id = selectedEntries?.wrappedValue.first,
+                    guard let id = entrySelection?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     withAnimation {
@@ -130,17 +130,17 @@ struct FileCommands: Commands {
                             return
                         }
 
-                        selectedEntries?.wrappedValue = [newEntry.id]
+                        entrySelection?.wrappedValue = [newEntry.id]
                     }
                 }
-                .disabled(selectedEntries?.wrappedValue.count != 1)
+                .disabled(entrySelection?.wrappedValue.count != 1)
 
                 Divider()
 
                 Button("Append", systemImage: "plus") {
                     withAnimation {
                         let entry = currentFile.appendEntry()
-                        selectedEntries?.wrappedValue = [entry.id]
+                        entrySelection?.wrappedValue = [entry.id]
                     }
                 }
 
@@ -149,10 +149,10 @@ struct FileCommands: Commands {
                 Button("Shift Time", systemImage: "timer") {
                     showSubtitleOffsetSheet?.wrappedValue.toggle()
                 }
-                .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
+                .disabled(entrySelection?.wrappedValue.isEmpty ?? true)
 
                 Button("Linear Correction", systemImage: "graph.2d") {
-                    selectedEntries?.wrappedValue.removeAll()
+                    entrySelection?.wrappedValue.removeAll()
                     showLinearCorrectionSheet?.wrappedValue.toggle()
                 }
                 .disabled(currentFile.entries.count < 2)
@@ -160,18 +160,18 @@ struct FileCommands: Commands {
                 Divider()
 
                 Button("Delete", systemImage: "trash") {
-                    guard let selectedEntries else {
+                    guard let entrySelection else {
                         return
                     }
 
                     withAnimation {
-                        currentFile.deleteAll { selectedEntries.wrappedValue.contains($0.id) }
+                        currentFile.deleteAll { entrySelection.wrappedValue.contains($0.id) }
                     }
 
-                    selectedEntries.wrappedValue.removeAll()
+                    entrySelection.wrappedValue.removeAll()
                 }
                 .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)
+                .disabled(entrySelection?.wrappedValue.isEmpty ?? true)
             }
         }
     }

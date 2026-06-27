@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SubtitleInspectorView: View {
-    var entries: [Binding<SrtEntry>]
+    var entries: [Binding<SRTEntry>]
     var selectAll: () -> Void
     var deselect: () -> Void
 
@@ -49,7 +49,7 @@ struct SubtitleInspectorView: View {
                         startTimePopover.toggle()
                     } label: {
                         LabeledContent("Start") {
-                            Text(SrtMarshaler.formatTime(entry.wrappedValue.startTime))
+                            Text(SRTMarshaler.formatTime(entry.wrappedValue.startTime))
                                 .font(.system(.body, design: .monospaced))
                         }
                         .contentShape(.rect)
@@ -71,7 +71,7 @@ struct SubtitleInspectorView: View {
                         endTimePopover.toggle()
                     } label: {
                         LabeledContent("End") {
-                            Text(SrtMarshaler.formatTime(entry.wrappedValue.endTime))
+                            Text(SRTMarshaler.formatTime(entry.wrappedValue.endTime))
                                 .font(.system(.body, design: .monospaced))
                         }
                         .contentShape(.rect)
@@ -104,7 +104,9 @@ struct SubtitleInspectorView: View {
 }
 
 #Preview {
-    @Previewable @State var entries: [Binding<SrtEntry>] = [.constant(SrtEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))]
+    @Previewable @State var entries: [Binding<SRTEntry>] = [
+        .constant(SRTEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))
+    ]
 
     ZStack {
         

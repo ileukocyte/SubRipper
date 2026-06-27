@@ -9,25 +9,25 @@ import Foundation
 
 @Observable
 class SubRipperStore {
-    var openFiles: [SrtFile] = []
+    var openFiles: [SRTFile] = []
     var hasOpenFiles: Bool { !openFiles.isEmpty }
 
-    subscript(id: UUID) -> SrtFile? {
+    subscript(id: UUID) -> SRTFile? {
         openFiles.first { $0.id == id }
     }
 
-    subscript(url: URL) -> SrtFile? {
+    subscript(url: URL) -> SRTFile? {
         openFiles.first { $0.url == url }
     }
 
-    func load(url: URL, encoding: String.Encoding = .utf8) throws -> SrtFile {
+    func load(url: URL, encoding: String.Encoding = .utf8) throws -> SRTFile {
         if let file = self[url] {
             return file
         }
 
         let content = try String(contentsOf: url, encoding: encoding)
-        let entries = try SrtMarshaler.unmarshal(from: content)
-        let file = SrtFile(url: url, entries: entries, originalContent: content)
+        let entries = try SRTMarshaler.unmarshal(from: content)
+        let file = SRTFile(url: url, entries: entries, originalContent: content)
 
         openFiles.append(file)
 
@@ -42,8 +42,8 @@ class SubRipperStore {
         openFiles.removeAll()
     }
 
-    func export(file: SrtFile, to url: URL? = nil) throws {
-        let content = SrtMarshaler.marshal(file.entries)
+    func export(file: SRTFile, to url: URL? = nil) throws {
+        let content = SRTMarshaler.marshal(file.entries)
         try content.write(to: url ?? file.url, atomically: true, encoding: .utf8)
 
         file.originalContent = content

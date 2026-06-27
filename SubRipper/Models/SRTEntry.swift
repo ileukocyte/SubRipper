@@ -1,5 +1,5 @@
 //
-//  SrtEntry.swift
+//  SRTEntry.swift
 //  SubRipper
 //
 //  Created by Alexander Oksanich on 6/5/2026.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SrtEntry: Identifiable, Equatable {
+struct SRTEntry: Identifiable, Equatable {
     let id = UUID()
     var index: Int
     var startTime: TimeInterval

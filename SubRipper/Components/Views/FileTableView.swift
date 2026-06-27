@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct FileTableView: View {
-    @Bindable var file: SrtFile
+    @Bindable var file: SRTFile
 
     @Binding var showSubtitleInspector: Bool
 
-    @State private var selection = Set<SrtEntry.ID>()
+    @State private var selection = Set<SRTEntry.ID>()
     @State private var showSubtitleOffsetSheet = false
     @State private var showLinearCorrectionSheet = false
 
-    private var selectedEntries: [Binding<SrtEntry>] {
+    private var selectedEntries: [Binding<SRTEntry>] {
         selection.compactMap { id in
             guard let index = file.entries.firstIndex(where: { $0.id == id }) else {
                 return nil
@@ -27,14 +27,14 @@ struct FileTableView: View {
     }
 
     var body: some View {
-        Table(of: SrtEntry.self, selection: $selection) {
+        Table(of: SRTEntry.self, selection: $selection) {
             TableColumn("Start") {
-                Text(SrtMarshaler.formatTime($0.startTime))
+                Text(SRTMarshaler.formatTime($0.startTime))
             }
             .width(125)
 
             TableColumn("End") {
-                Text(SrtMarshaler.formatTime($0.endTime))
+                Text(SRTMarshaler.formatTime($0.endTime))
             }
             .width(125)
 
@@ -49,15 +49,15 @@ struct FileTableView: View {
                 TableRow(entry)
             }
         }
-        .focusedSceneValue(\.selectedEntries, $selection)
+        .focusedSceneValue(\.entrySelection, $selection)
         .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
         .focusedSceneValue(\.showLinearCorrectionSheet, $showLinearCorrectionSheet)
-        .contextMenu(forSelectionType: SrtEntry.ID.self) { selected in
+        .contextMenu(forSelectionType: SRTEntry.ID.self) { selected in
             if selection != selected {
                 let _ = { selection = selected }()
             }
 
-            let selectedEntriesMenu: [Binding<SrtEntry>] = selected.compactMap { id in
+            let selectedEntriesMenu: [Binding<SRTEntry>] = selected.compactMap { id in
                 guard let index = file.entries.firstIndex(where: { entry in
                     entry.id == id
                 }) else {
@@ -203,9 +203,9 @@ What do you mean?
 """
 
     FileTableView(
-        file: SrtFile(
+        file: SRTFile(
             url: url,
-            entries: try! SrtMarshaler.unmarshal(from: content),
+            entries: try! SRTMarshaler.unmarshal(from: content),
             originalContent: content
         ),
         showSubtitleInspector: .constant(true)

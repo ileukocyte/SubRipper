@@ -1,5 +1,5 @@
 //
-//  SrtFile.swift
+//  SRTFile.swift
 //  SubRipper
 //
 //  Created by Alexander Oksanich on 6/19/2026.
@@ -8,21 +8,21 @@
 import SwiftUI
 
 @Observable
-class SrtFile: Identifiable {
+class SRTFile: Identifiable {
     let id = UUID()
     var url: URL
-    var entries: [SrtEntry]
+    var entries: [SRTEntry]
     var originalContent: String
 
-    init(url: URL, entries: [SrtEntry], originalContent: String) {
+    init(url: URL, entries: [SRTEntry], originalContent: String) {
         self.url = url
         self.entries = entries
         self.originalContent = originalContent
     }
 
     @discardableResult
-    func appendEntry() -> SrtEntry {
-        let entry = SrtEntry(
+    func appendEntry() -> SRTEntry {
+        let entry = SRTEntry(
             index: (entries.last?.index ?? 0) + 1,
             startTime: entries.last?.endTime ?? 0,
             endTime: entries.last?.endTime ?? 0,
@@ -35,12 +35,12 @@ class SrtFile: Identifiable {
     }
 
     @discardableResult
-    func insertEntry(after previous: SrtEntry) -> SrtEntry? {
+    func insertEntry(after previous: SRTEntry) -> SRTEntry? {
         guard let index = entries.firstIndex(of: previous) else {
             return nil
         }
 
-        let entry = SrtEntry(
+        let entry = SRTEntry(
             index: previous.index,
             startTime: previous.endTime,
             endTime: previous.endTime,
@@ -57,12 +57,12 @@ class SrtFile: Identifiable {
     }
 
     @discardableResult
-    func insertEntry(before next: SrtEntry) -> SrtEntry? {
+    func insertEntry(before next: SRTEntry) -> SRTEntry? {
         guard let index = entries.firstIndex(of: next) else {
             return nil
         }
 
-        let entry = SrtEntry(
+        let entry = SRTEntry(
             index: next.index,
             startTime: next.startTime,
             endTime: next.startTime,
@@ -78,7 +78,7 @@ class SrtFile: Identifiable {
         return entry
     }
 
-    func deleteAll(entries toDelete: [SrtEntry]) {
+    func deleteAll(entries toDelete: [SRTEntry]) {
         let indices = toDelete.compactMap { entries.firstIndex(of: $0) }.sorted(by: <)
 
         entries.remove(atOffsets: IndexSet(indices))
@@ -88,7 +88,7 @@ class SrtFile: Identifiable {
         }
     }
 
-    func deleteAll(where predicate: (SrtEntry) -> Bool) {
+    func deleteAll(where predicate: (SRTEntry) -> Bool) {
         deleteAll(entries: entries.filter(predicate))
     }
 

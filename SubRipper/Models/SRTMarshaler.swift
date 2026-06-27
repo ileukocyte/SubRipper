@@ -1,5 +1,5 @@
 //
-//  SrtMarshaler.swift
+//  SRTMarshaler.swift
 //  SubRipper
 //
 //  Created by Alexander Oksanich on 6/5/2026.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SrtMarshaler {
+enum SRTMarshaler {
     // timestampRegex is used for interval timestamp validation, so digit count matching is not as strict
     static let timestampRegex = /(?<hours>\d*\d):(?<minutes>[0-5]?\d):(?<seconds>[0-5]?\d),(?<ms>\d{1,3})/
     static let entryRegex = /^(?<index>\d+)$\n^((?<startHours>\d{2,}):(?<startMinutes>[0-5]\d):(?<startSeconds>[0-5]\d),(?<startMs>\d{3})) --> ((?<endHours>\d{2,}):(?<endMinutes>[0-5]\d):(?<endSeconds>[0-5]\d),(?<endMs>\d{3}))$\n(?<content>^.+$(\n^.+$)*)/
@@ -60,7 +60,7 @@ enum SrtMarshaler {
         return prefix + String(format: "%02d:%02d:%02d,%03d", hours, minutes, seconds, ms)
     }
 
-    static func unmarshal(from data: String) throws -> [SrtEntry] {
+    static func unmarshal(from data: String) throws -> [SRTEntry] {
         let normalizedData = data
             .trimmingCharacters(in: .init(charactersIn: "\u{feff}"))
             .replacingOccurrences(of: "\r\n", with: "\n")
@@ -79,7 +79,7 @@ enum SrtMarshaler {
                 .filter { !$0.isEmpty }
                 .joined(separator: "\n")
 
-            return SrtEntry(
+            return SRTEntry(
                 index: index,
                 startTime: startTime,
                 endTime: endTime,
@@ -88,7 +88,7 @@ enum SrtMarshaler {
         }
     }
 
-    static func marshal(_ entries: [SrtEntry]) -> String {
+    static func marshal(_ entries: [SRTEntry]) -> String {
         return entries.map { entry in
             "\(entry.index)\n" +
             "\(Self.formatTime(entry.startTime)) --> \(Self.formatTime(entry.endTime))\n" +

@@ -18,9 +18,7 @@ struct SubRipperApp: App {
     var body: some Scene {
         Window("SubRipper", id: "startup") {
             StartupView()
-                .onAppear {
-                    NSApp.centerWindow(id: "startup")
-                }
+                .onAppear { NSApp.centerWindow(id: "startup") }
                 .containerBackground(.clear, for: .window)
         }
         .windowResizability(.contentSize)
