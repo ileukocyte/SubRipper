@@ -1,0 +1,87 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "srgb:0.46202,0.83828,1.00000,1.00000",
+      "srgb:0.00000,0.32852,0.57488,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "image-name" : "SubRipper.png",
+          "name" : "SubRipper",
+          "position" : {
+            "scale" : 0.54,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blend-mode" : "soft-light",
+      "blur-material" : 0.5,
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name" : "SubRipper.png",
+          "name" : "SubRipper",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              -160
+            ]
+          }
+        },
+        {
+          "image-name" : "SubRipper.png",
+          "name" : "SubRipper",
+          "position" : {
+            "scale" : 0.48,
+            "translation-in-points" : [
+              0,
+              160
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

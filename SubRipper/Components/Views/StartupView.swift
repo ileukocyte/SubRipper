@@ -13,56 +13,56 @@ struct StartupView: View {
     @Environment(SubRipperStore.self) private var store
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 12) {
-                Group {
-                    Image(systemName: "captions.bubble")
-                        .font(.system(size: 56, weight: .light))
-                        .foregroundStyle(.secondary)
-
-                    Text("SubRipper")
-                        .font(.largeTitle.weight(.bold))
+        VStack {
+            VStack {
+                if let icon = NSApp.applicationIconImage {
+                    Image(nsImage: icon)
                 }
 
-                Group {
-                    Text("Open an .srt file to get started")
-                        .foregroundStyle(.secondary)
-                        
-                    Button("Open", systemImage: "arrow.up.forward") {
-                        FilePanels.openNSOpenPanel { urls, encoding in
-                            var isStartupOpen = true
+                Text("SubRipper")
+                    .font(.largeTitle.weight(.bold))
+            }
+            .padding(5)
 
-                            for url in urls {
-                                let accessed = url.startAccessingSecurityScopedResource()
+            VStack(spacing: 10) {
+                Text("Open an .srt file to get started")
+                    .foregroundStyle(.secondary)
 
-                                do {
-                                    let file = try store.load(url: url, encoding: encoding)
+                Button("Open", systemImage: "arrow.up.forward") {
+                    FilePanels.openNSOpenPanel { urls, encoding in
+                        var isStartupOpen = true
 
-                                    if isStartupOpen {
-                                        NSApp.closeWindow(id: "startup")
-                                        isStartupOpen = false
-                                    }
+                        for url in urls {
+                            let accessed = url.startAccessingSecurityScopedResource()
 
-                                    openWindow(id: "file", value: file.id)
-                                } catch {
-                                    if accessed {
-                                        url.stopAccessingSecurityScopedResource()
-                                    }
+                            do {
+                                let file = try store.load(url: url, encoding: encoding)
 
-                                    Alerts.showDefaultErrorAlert(for: error)
+                                if isStartupOpen {
+                                    NSApp.closeWindow(id: "startup")
+                                    isStartupOpen = false
                                 }
+
+                                openWindow(id: "file", value: file.id)
+                            } catch {
+                                if accessed {
+                                    url.stopAccessingSecurityScopedResource()
+                                }
+
+                                Alerts.showDefaultErrorAlert(for: error)
                             }
                         }
                     }
-                    .buttonStyle(.glassProminent)
-                    .tint(.accentColor)
-                    .controlSize(.large)
-
-                    Text("or drag a file anywhere into this window")
-                        .font(.footnote)
-                        .foregroundStyle(.tertiary)
                 }
+                .buttonStyle(.glassProminent)
+                .tint(.accentColor)
+                .controlSize(.large)
+
+                Text("or drag a file anywhere into this window")
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
             }
+            .padding(5)
         }
         .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .navigationTitle("")

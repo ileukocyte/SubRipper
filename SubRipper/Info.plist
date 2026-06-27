@@ -17,6 +17,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleIconFile</key>
+	<string>SubRipperIcon</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

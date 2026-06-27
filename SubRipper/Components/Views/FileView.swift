@@ -34,7 +34,7 @@ struct FileView: View {
                     }
 
                     let alert = NSAlert()
-                    alert.messageText = "Do you want to save the changes?"
+                    alert.messageText = "Do you want to save the changes for \"\(file.url.lastPathComponent)\"?"
                     alert.alertStyle = .warning
 
                     let (_, discard, _) = (
