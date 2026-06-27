@@ -11,7 +11,7 @@ struct SubtitleOffsetView: View {
     var entries: [Binding<SRTEntry>]
     let shouldDismiss: Bool
 
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
     @State private var timestamp: TimeInterval = 0
     @State private var formatted: String = SRTMarshaler.defaultFormattedTimestamp
@@ -121,7 +121,9 @@ struct SubtitleOffsetView: View {
 }
 
 #Preview {
-    @Previewable var entries: [Binding<SRTEntry>] = [.constant(SRTEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))]
+    @Previewable var entries: [Binding<SRTEntry>] = [
+        .constant(SRTEntry(index: 2, startTime: 0.0, endTime: 121.0, content: "Why are you\nall dressed up?"))
+    ]
 
     SubtitleOffsetView(entries: entries, shouldDismiss: false)
 }

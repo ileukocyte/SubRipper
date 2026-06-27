@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		1CA8A6642FF012B8008973B2 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1CA8A6632FF012B4008973B2 /* README.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		1C63DC5D2FD330BA007926A8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -232,7 +228,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1CA8A6642FF012B8008973B2 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
