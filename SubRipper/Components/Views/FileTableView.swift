@@ -53,11 +53,9 @@ struct FileTableView: View {
         .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
         .focusedSceneValue(\.showLinearCorrectionSheet, $showLinearCorrectionSheet)
         .contextMenu(forSelectionType: SrtEntry.ID.self) { selected in
-            let _ = {
-                if selection != selected {
-                    selection = selected
-                }
-            }()
+            if selection != selected {
+                let _ = { selection = selected }()
+            }
 
             let selectedEntriesMenu: [Binding<SrtEntry>] = selected.compactMap { id in
                 guard let index = file.entries.firstIndex(where: { entry in
@@ -82,7 +80,11 @@ struct FileTableView: View {
 
                     Button {
                         withAnimation {
-                            file.insertEntry(after: entry.wrappedValue)
+                            guard let newEntry = file.insertEntry(after: entry.wrappedValue) else {
+                                return
+                            }
+
+                            selection = [newEntry.id]
                         }
                     } label: {
                         Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
@@ -90,7 +92,11 @@ struct FileTableView: View {
 
                     Button {
                         withAnimation {
-                            file.insertEntry(before: entry.wrappedValue)
+                            guard let newEntry = file.insertEntry(before: entry.wrappedValue) else {
+                                return
+                            }
+
+                            selection = [newEntry.id]
                         }
                     } label: {
                         Label("Insert Above", systemImage: "square.topthird.inset.filled")
@@ -111,6 +117,8 @@ struct FileTableView: View {
                     withAnimation {
                         file.deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
                     }
+
+                    selection.removeAll()
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }

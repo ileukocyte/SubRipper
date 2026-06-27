@@ -112,7 +112,11 @@ struct FileCommands: Commands {
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     withAnimation {
-                        currentFile.insertEntry(after: entry)
+                        guard let newEntry = currentFile.insertEntry(after: entry) else {
+                            return
+                        }
+
+                        selectedEntries?.wrappedValue = [newEntry.id]
                     }
                 }
                 .disabled(selectedEntries?.wrappedValue.count != 1)
@@ -122,7 +126,11 @@ struct FileCommands: Commands {
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
 
                     withAnimation {
-                        currentFile.insertEntry(before: entry)
+                        guard let newEntry = currentFile.insertEntry(before: entry) else {
+                            return
+                        }
+
+                        selectedEntries?.wrappedValue = [newEntry.id]
                     }
                 }
                 .disabled(selectedEntries?.wrappedValue.count != 1)
@@ -130,7 +138,10 @@ struct FileCommands: Commands {
                 Divider()
 
                 Button("Append", systemImage: "plus") {
-                    currentFile.appendEntry()
+                    withAnimation {
+                        let entry = currentFile.appendEntry()
+                        selectedEntries?.wrappedValue = [entry.id]
+                    }
                 }
 
                 Divider()
@@ -156,6 +167,8 @@ struct FileCommands: Commands {
                     withAnimation {
                         currentFile.deleteAll { selectedEntries.wrappedValue.contains($0.id) }
                     }
+
+                    selectedEntries.wrappedValue.removeAll()
                 }
                 .keyboardShortcut(.delete, modifiers: .command)
                 .disabled(selectedEntries?.wrappedValue.isEmpty ?? true)

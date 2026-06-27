@@ -20,53 +20,62 @@ class SrtFile: Identifiable {
         self.originalContent = originalContent
     }
 
-    func appendEntry() {
-        let new = SrtEntry(
+    @discardableResult
+    func appendEntry() -> SrtEntry {
+        let entry = SrtEntry(
             index: (entries.last?.index ?? 0) + 1,
             startTime: entries.last?.endTime ?? 0,
             endTime: entries.last?.endTime ?? 0,
             content: ""
         )
 
-        entries.append(new)
+        entries.append(entry)
+
+        return entry
     }
 
-    func insertEntry(after: SrtEntry) {
-        guard let index = entries.firstIndex(of: after) else {
-            return
+    @discardableResult
+    func insertEntry(after previous: SrtEntry) -> SrtEntry? {
+        guard let index = entries.firstIndex(of: previous) else {
+            return nil
         }
 
-        let new = SrtEntry(
-            index: after.index,
-            startTime: after.endTime,
-            endTime: after.endTime,
+        let entry = SrtEntry(
+            index: previous.index,
+            startTime: previous.endTime,
+            endTime: previous.endTime,
             content: ""
         )
 
-        entries.insert(new, at: index + 1)
+        entries.insert(entry, at: index + 1)
 
         for i in 0..<entries.count {
             entries[i].index = i + 1
         }
+
+        return entry
     }
 
-    func insertEntry(before: SrtEntry) {
-        guard let index = entries.firstIndex(of: before) else {
-            return
+    @discardableResult
+    func insertEntry(before next: SrtEntry) -> SrtEntry? {
+        guard let index = entries.firstIndex(of: next) else {
+            return nil
         }
 
-        let new = SrtEntry(
-            index: before.index,
-            startTime: before.startTime,
-            endTime: before.startTime,
+        let entry = SrtEntry(
+            index: next.index,
+            startTime: next.startTime,
+            endTime: next.startTime,
             content: ""
         )
 
-        entries.insert(new, at: index)
+        entries.insert(entry, at: index)
 
         for i in 0..<entries.count {
             entries[i].index = i + 1
         }
+
+        return entry
     }
 
     func deleteAll(entries toDelete: [SrtEntry]) {
