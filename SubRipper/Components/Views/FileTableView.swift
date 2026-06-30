@@ -277,7 +277,7 @@ struct FileTableView: View {
     ) -> AttributedString {
         var attributed = AttributedString(text)
 
-        guard !searchQuery.isEmpty else {
+        guard !searchQuery.isEmpty, showSearchPanel else {
             return attributed
         }
 

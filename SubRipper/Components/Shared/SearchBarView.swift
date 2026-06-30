@@ -54,16 +54,31 @@ struct SearchBarView: NSViewRepresentable {
             parent.query = view.stringValue
         }
 
-        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        func control(
+            _ control: NSControl,
+            textView: NSTextView,
+            doCommandBy commandSelector: Selector
+        ) -> Bool {
             switch commandSelector {
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onEscape?()
+
                 return true
             case #selector(NSResponder.moveUp(_:)):
                 parent.onUpArrow?()
+
                 return true
             case #selector(NSResponder.moveDown(_:)):
                 parent.onDownArrow?()
+
+                return true
+            case #selector(NSResponder.insertNewline(_:)):
+                if NSEvent.modifierFlags.contains(.shift) {
+                    parent.onUpArrow?()
+                } else {
+                    parent.onDownArrow?()
+                }
+
                 return true
             default:
                 return false
