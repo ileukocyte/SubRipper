@@ -13,4 +13,5 @@ extension FocusedValues {
     @Entry var showSubtitleInspector: Binding<Bool>?
     @Entry var showSubtitleOffsetSheet: Binding<Bool>?
     @Entry var showLinearCorrectionSheet: Binding<Bool>?
+    @Entry var showSearchPanel: Binding<Bool>?
 }

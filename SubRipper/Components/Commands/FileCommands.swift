@@ -17,6 +17,7 @@ struct FileCommands: Commands {
     @FocusedValue(\.showSubtitleInspector) private var showSubtitleInspector
     @FocusedValue(\.showSubtitleOffsetSheet) private var showSubtitleOffsetSheet
     @FocusedValue(\.showLinearCorrectionSheet) private var showLinearCorrectionSheet
+    @FocusedValue(\.showSearchPanel) private var showSearchPanel
 
     var body: some Commands {
         CommandGroup(before: .sidebar) {
@@ -107,6 +108,14 @@ struct FileCommands: Commands {
 
         if let currentFile {
             CommandMenu("Subtitles") {
+                Button("Find...", systemImage: "text.page.badge.magnifyingglass") {
+                    showSearchPanel?.wrappedValue.toggle()
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .disabled(showSearchPanel == nil)
+
+                Divider()
+
                 Button("Insert Below", systemImage: "square.bottomthird.inset.filled") {
                     guard let id = entrySelection?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
