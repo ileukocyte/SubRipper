@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SearchBarView: NSViewRepresentable {
     @Binding var query: String
+    @Binding var matchCase: Bool
 
     var onEscape: (() -> Void)?
     var onUpArrow: (() -> Void)?
@@ -17,6 +18,7 @@ struct SearchBarView: NSViewRepresentable {
     func makeNSView(context: Context) -> NSSearchField {
         let view = NSSearchField()
         view.delegate = context.coordinator
+        view.searchMenuTemplate = context.coordinator.makeSearchMenu()
 
         DispatchQueue.main.async {
             view.window?.makeFirstResponder(view)
@@ -44,6 +46,27 @@ struct SearchBarView: NSViewRepresentable {
 
         init(parent: SearchBarView) {
             self.parent = parent
+        }
+
+        func makeSearchMenu() -> NSMenu {
+            let menu = NSMenu()
+
+            let matchCaseItem = NSMenuItem(
+                title: "Match Case",
+                action: #selector(toggleMatchCase(_:)),
+                keyEquivalent: ""
+            )
+            matchCaseItem.image = NSImage(systemSymbolName: "textformat.alt", accessibilityDescription: matchCaseItem.title)
+            matchCaseItem.target = self
+            matchCaseItem.state = parent.matchCase ? .on : .off
+            menu.addItem(matchCaseItem)
+
+            return menu
+        }
+
+        @objc func toggleMatchCase(_ sender: NSMenuItem) {
+            parent.matchCase.toggle()
+            sender.state = parent.matchCase ? .on : .off
         }
 
         func controlTextDidChange(_ notification: Notification) {
@@ -84,5 +107,18 @@ struct SearchBarView: NSViewRepresentable {
                 return false
             }
         }
+    }
+}
+
+#Preview {
+    @Previewable @State var query = "test"
+    @Previewable @State var matchCase = false
+
+    Form {
+        SearchBarView(
+            query: $query,
+            matchCase: $matchCase
+        )
+        .padding()
     }
 }

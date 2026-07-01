@@ -13,11 +13,13 @@ struct FileTableView: View {
     @Binding var showSubtitleInspector: Bool
 
     @State private var selection = Set<SRTEntry.ID>()
-    @State private var searchQuery = ""
-    @State private var searchSelectionIndex: Array.Index = 0
     @State private var showSubtitleOffsetSheet = false
     @State private var showLinearCorrectionSheet = false
+
     @State private var showSearchPanel = false
+    @State private var searchQuery = ""
+    @State private var searchSelectionIndex: Array.Index = 0
+    @State private var matchCase = false
 
     private var selectedEntries: [Binding<SRTEntry>] {
         selection.compactMap { id in
@@ -34,7 +36,13 @@ struct FileTableView: View {
             return []
         }
 
-        return file.entries.filter { $0.content.localizedCaseInsensitiveContains(searchQuery) }
+        return file.entries.filter {
+            if matchCase {
+                $0.content.contains(searchQuery)
+            } else {
+                $0.content.localizedCaseInsensitiveContains(searchQuery)
+            }
+        }
     }
 
     var body: some View {
@@ -42,7 +50,10 @@ struct FileTableView: View {
             VStack(spacing: 0) {
                 if showSearchPanel {
                     HStack {
-                        SearchBarView(query: $searchQuery) {
+                        SearchBarView(
+                            query: $searchQuery,
+                            matchCase: $matchCase
+                        ) {
                             showSearchPanel.toggle()
                         } onUpArrow: {
                             selectPreviousSearchResult(scrollProxy: proxy)
@@ -79,7 +90,7 @@ struct FileTableView: View {
                     .width(125)
 
                     TableColumn("Subtitle") {
-                        Text(withSearchResultsHighlighted($0.content, options: .caseInsensitive))
+                        Text(withSearchResultsHighlighted($0.content))
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(.vertical, 2.5)
@@ -105,8 +116,17 @@ struct FileTableView: View {
                     selection = [first.id]
                     proxy.scrollTo(first.id, anchor: .center)
                 }
+                .onChange(of: matchCase) {
+                    guard let first = searchResults.first else {
+                        return
+                    }
+
+                    selection = [first.id]
+                    proxy.scrollTo(first.id, anchor: .center)
+                }
                 .onChange(of: selection) { _, newValue in
-                    guard newValue.count == 1,
+                    guard showSearchPanel,
+                          newValue.count == 1,
                           let selected = newValue.first,
                           let index = searchResults.firstIndex(where: { $0.id == selected })
                     else {
@@ -272,7 +292,6 @@ struct FileTableView: View {
 
     private func withSearchResultsHighlighted(
         _ text: String,
-        options: String.CompareOptions,
         backgroundColor color: Color = .yellow.opacity(0.3)
     ) -> AttributedString {
         var attributed = AttributedString(text)
@@ -282,6 +301,11 @@ struct FileTableView: View {
         }
 
         var searchRange = attributed.startIndex..<attributed.endIndex
+        var options = String.CompareOptions()
+
+        if !matchCase {
+            options.insert(.caseInsensitive)
+        }
 
         while let range = attributed[searchRange].range(of: searchQuery, options: options) {
             attributed[range].backgroundColor = color
