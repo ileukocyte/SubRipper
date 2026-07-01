@@ -18,6 +18,7 @@ struct FileTableView: View {
 
     @State private var showSearchPanel = false
     @State private var searchQuery = ""
+    @State private var debouncedSearchQuery = ""
     @State private var searchSelectionIndex: Array.Index = 0
     @State private var matchCase = false
 
@@ -32,15 +33,15 @@ struct FileTableView: View {
     }
 
     private var searchResults: [SRTEntry] {
-        guard !searchQuery.isEmpty else {
+        guard !debouncedSearchQuery.isEmpty else {
             return []
         }
 
         return file.entries.filter {
             if matchCase {
-                $0.content.contains(searchQuery)
+                $0.content.contains(debouncedSearchQuery)
             } else {
-                $0.content.localizedCaseInsensitiveContains(searchQuery)
+                $0.content.localizedCaseInsensitiveContains(debouncedSearchQuery)
             }
         }
     }
@@ -100,8 +101,22 @@ struct FileTableView: View {
                         TableRow(entry)
                     }
                 }
-                .onChange(of: searchQuery) { _, newValue in
-                    guard !newValue.isEmpty, let first = searchResults.first else {
+                .task(id: searchQuery) {
+                    guard !searchQuery.isEmpty else {
+                        debouncedSearchQuery = ""
+
+                        return
+                    }
+
+                    try? await Task.sleep(for: .milliseconds(250))
+
+                    guard !Task.isCancelled else {
+                        return
+                    }
+
+                    debouncedSearchQuery = searchQuery
+
+                    guard let first = searchResults.first else {
                         return
                     }
 
@@ -296,7 +311,7 @@ struct FileTableView: View {
     ) -> AttributedString {
         var attributed = AttributedString(text)
 
-        guard !searchQuery.isEmpty, showSearchPanel else {
+        guard !debouncedSearchQuery.isEmpty, showSearchPanel else {
             return attributed
         }
 
@@ -307,7 +322,7 @@ struct FileTableView: View {
             options.insert(.caseInsensitive)
         }
 
-        while let range = attributed[searchRange].range(of: searchQuery, options: options) {
+        while let range = attributed[searchRange].range(of: debouncedSearchQuery, options: options) {
             attributed[range].backgroundColor = color
             searchRange = range.upperBound..<attributed.endIndex
         }
