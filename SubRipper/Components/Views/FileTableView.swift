@@ -159,78 +159,7 @@ struct FileTableView: View {
 
                     searchSelectionIndex = index
                 }
-                .contextMenu(forSelectionType: SRTEntry.ID.self) { selected in
-                    if selection != selected {
-                        let _ = { selection = selected }()
-                    }
-
-                    let selectedEntriesMenu: [Binding<SRTEntry>] = selected.compactMap { id in
-                        guard let index = file.entries.firstIndex(where: { entry in
-                            entry.id == id
-                        }) else {
-                            return nil
-                        }
-
-                        return $file.entries[index]
-                    }
-
-                    if !selectedEntriesMenu.isEmpty {
-                        if selectedEntriesMenu.count == 1, let entry = selectedEntriesMenu.first {
-                            Button {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(entry.wrappedValue.content, forType: .string)
-                            } label: {
-                                Label("Copy Subtitle", systemImage: "doc.on.doc")
-                            }
-
-                            Divider()
-
-                            Button {
-                                withAnimation {
-                                    guard let newEntry = file.insertEntry(after: entry.wrappedValue) else {
-                                        return
-                                    }
-
-                                    selection = [newEntry.id]
-                                }
-                            } label: {
-                                Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
-                            }
-
-                            Button {
-                                withAnimation {
-                                    guard let newEntry = file.insertEntry(before: entry.wrappedValue) else {
-                                        return
-                                    }
-
-                                    selection = [newEntry.id]
-                                }
-                            } label: {
-                                Label("Insert Above", systemImage: "square.topthird.inset.filled")
-                            }
-
-                            Divider()
-                        }
-
-                        Button {
-                            showSubtitleOffsetSheet.toggle()
-                        } label: {
-                            Label("Shift Time", systemImage: "timer")
-                        }
-
-                        Divider()
-
-                        Button(role: .destructive) {
-                            withAnimation {
-                                file.deleteAll(entries: selectedEntriesMenu.map(\.wrappedValue))
-                            }
-
-                            selection.removeAll()
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-                }
+                .contextMenu(forSelectionType: SRTEntry.ID.self, menu: makeSubtitleContextMenu)
                 .copyable(selectedEntries.map(\.wrappedValue.content))
             }
             .animation(.easeInOut, value: showSearchPanel)
@@ -275,6 +204,81 @@ struct FileTableView: View {
             }
             .padding()
             .frame(minWidth: 600, maxWidth: 600)
+        }
+    }
+
+    @ViewBuilder
+    private func makeSubtitleContextMenu(for menuSelection: Set<SRTEntry.ID>) -> some View {
+        // update the table selection according to the menu selection
+        if selection != menuSelection {
+            let _ = { selection = menuSelection }()
+        }
+
+        let menuEntries: [SRTEntry] = menuSelection.compactMap { id in
+            guard let index = file.entries.firstIndex(where: { $0.id == id }) else {
+                return nil
+            }
+
+            return file.entries[index]
+        }
+
+        if !menuEntries.isEmpty {
+            // menu items for a single subtitle
+            if menuEntries.count == 1, let entry = menuEntries.first {
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(entry.content, forType: .string)
+                } label: {
+                    Label("Copy Subtitle", systemImage: "doc.on.doc")
+                }
+
+                Divider()
+
+                Button {
+                    withAnimation {
+                        guard let newEntry = file.insertEntry(after: entry) else {
+                            return
+                        }
+
+                        selection = [newEntry.id]
+                    }
+                } label: {
+                    Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
+                }
+
+                Button {
+                    withAnimation {
+                        guard let newEntry = file.insertEntry(before: entry) else {
+                            return
+                        }
+
+                        selection = [newEntry.id]
+                    }
+                } label: {
+                    Label("Insert Above", systemImage: "square.topthird.inset.filled")
+                }
+
+                Divider()
+            }
+
+            // menu items for multiple subtitles
+            Button {
+                showSubtitleOffsetSheet.toggle()
+            } label: {
+                Label("Shift Time", systemImage: "timer")
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                withAnimation {
+                    file.deleteAll(entries: menuEntries)
+                }
+
+                selection.removeAll()
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
