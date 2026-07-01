@@ -121,7 +121,10 @@ struct FileTableView: View {
                     }
 
                     selection = [first.id]
-                    proxy.scrollTo(first.id, anchor: .center)
+
+                    withAnimation {
+                        proxy.scrollTo(first.id, anchor: .center)
+                    }
                 }
                 .onChange(of: showSearchPanel) { _, newValue in
                     guard newValue, !searchQuery.isEmpty, let first = searchResults.first else {
@@ -129,7 +132,10 @@ struct FileTableView: View {
                     }
 
                     selection = [first.id]
-                    proxy.scrollTo(first.id, anchor: .center)
+
+                    withAnimation {
+                        proxy.scrollTo(first.id, anchor: .center)
+                    }
                 }
                 .onChange(of: matchCase) {
                     guard let first = searchResults.first else {
@@ -137,7 +143,10 @@ struct FileTableView: View {
                     }
 
                     selection = [first.id]
-                    proxy.scrollTo(first.id, anchor: .center)
+
+                    withAnimation {
+                        proxy.scrollTo(first.id, anchor: .center)
+                    }
                 }
                 .onChange(of: selection) { _, newValue in
                     guard showSearchPanel,
@@ -284,7 +293,12 @@ struct FileTableView: View {
 
         let id = searchResults[index].id
         selection = [id]
-        proxy?.scrollTo(id, anchor: .center)
+
+        if let proxy {
+            withAnimation {
+                proxy.scrollTo(id, anchor: .center)
+            }
+        }
     }
 
     private func selectNextSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
@@ -302,7 +316,12 @@ struct FileTableView: View {
 
         let id = searchResults[index].id
         selection = [id]
-        proxy?.scrollTo(id, anchor: .center)
+
+        if let proxy {
+            withAnimation {
+                proxy.scrollTo(id, anchor: .center)
+            }
+        }
     }
 
     private func withSearchResultsHighlighted(
