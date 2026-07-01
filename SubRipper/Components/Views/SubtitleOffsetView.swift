@@ -87,11 +87,13 @@ struct SubtitleOffsetView: View {
     }
 
     private func calculateOffset() -> TimeInterval {
-        if Keys.allModifiersPressed([.option, .shift]) {
+        let flags = NSEvent.modifierFlags
+
+        return if flags.contains([.option, .shift]) {
             60
-        } else if Keys.allModifiersPressed([.shift]) {
+        } else if flags.contains(.shift) {
             30
-        } else if Keys.allModifiersPressed([.option]) {
+        } else if flags.contains(.option) {
             15
         } else {
             1

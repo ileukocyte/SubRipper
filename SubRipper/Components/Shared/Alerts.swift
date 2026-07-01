@@ -9,8 +9,10 @@ import AppKit
 
 enum Alerts {
     @MainActor
-    static func showDefaultErrorAlert(for error: any Error) {
+    @discardableResult
+    static func showDefaultErrorAlert(for error: any Error) -> NSApplication.ModalResponse {
         let alert = NSAlert(error: error)
-        alert.runModal()
+
+        return alert.runModal()
     }
 }
