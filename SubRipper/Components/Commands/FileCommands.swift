@@ -107,15 +107,17 @@ struct FileCommands: Commands {
         }
 
         if let currentFile {
-            CommandMenu("Subtitles") {
+            CommandGroup(after: .pasteboard) {
+                Divider()
+
                 Button("Find...", systemImage: "text.page.badge.magnifyingglass") {
                     showSearchPanel?.wrappedValue.toggle()
                 }
                 .keyboardShortcut("f", modifiers: .command)
                 .disabled(showSearchPanel == nil)
+            }
 
-                Divider()
-
+            CommandMenu("Subtitles") {
                 Button("Insert Below", systemImage: "square.bottomthird.inset.filled") {
                     guard let id = entrySelection?.wrappedValue.first,
                           let entry = currentFile.entries.first(where: { $0.id == id }) else { return }
