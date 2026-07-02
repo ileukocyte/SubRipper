@@ -18,6 +18,7 @@ struct SearchBarView: NSViewRepresentable {
     func makeNSView(context: Context) -> NSSearchField {
         let view = NSSearchField()
         view.delegate = context.coordinator
+        view.bezelStyle = .squareBezel
         view.searchMenuTemplate = context.coordinator.makeSearchMenu()
 
         DispatchQueue.main.async {

@@ -22,6 +22,9 @@ struct FileTableView: View {
     @State private var searchSelectionIndex: Array.Index = 0
     @State private var matchCase = false
 
+    @State private var showReplacePanel = false
+    @State private var replacement = ""
+
     private var selectedEntries: [Binding<SRTEntry>] {
         selection.compactMap { id in
             guard let index = file.entries.firstIndex(where: { $0.id == id }) else {
@@ -38,11 +41,13 @@ struct FileTableView: View {
         }
 
         return file.entries.filter {
-            if matchCase {
-                $0.content.contains(debouncedSearchQuery)
-            } else {
-                $0.content.localizedCaseInsensitiveContains(debouncedSearchQuery)
+            var options = String.CompareOptions()
+
+            if !matchCase {
+                options.insert(.caseInsensitive)
             }
+
+            return $0.content.range(of: debouncedSearchQuery, options: options) != nil
         }
     }
 
@@ -73,10 +78,38 @@ struct FileTableView: View {
                             Button("Done") {
                                 showSearchPanel.toggle()
                             }
+
+                            Toggle("Replace", isOn: $showReplacePanel)
                         }
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
+
+                    if showReplacePanel {
+                        HStack {
+                            ReplaceBarView(replacement: $replacement) {
+                                showReplacePanel.toggle()
+                            } onUpArrow: {
+                                selectPreviousSearchResult(scrollProxy: proxy)
+                            } onDownArrow: {
+                                selectNextSearchResult(scrollProxy: proxy)
+                            } onEnter: {
+                                replaceCurrentSearchResult(scrollProxy: proxy)
+                            }
+
+                            Button("Replace") {
+                                replaceCurrentSearchResult(scrollProxy: proxy)
+                            }
+                            .disabled(searchResults.isEmpty)
+
+                            Button("Replace All") {
+                                replaceAllSearchResults()
+                            }
+                            .disabled(searchResults.isEmpty)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                    }
                 }
 
                 Table(of: SRTEntry.self, selection: $selection) {
@@ -127,7 +160,14 @@ struct FileTableView: View {
                     }
                 }
                 .onChange(of: showSearchPanel) { _, newValue in
-                    guard newValue, !searchQuery.isEmpty, let first = searchResults.first else {
+                    guard newValue else {
+                        showReplacePanel = false
+                        replacement = ""
+
+                        return
+                    }
+
+                    guard !searchQuery.isEmpty, let first = searchResults.first else {
                         return
                     }
 
@@ -154,6 +194,8 @@ struct FileTableView: View {
                           let selected = newValue.first,
                           let index = searchResults.firstIndex(where: { $0.id == selected })
                     else {
+                        searchSelectionIndex = 0
+
                         return
                     }
 
@@ -163,6 +205,7 @@ struct FileTableView: View {
                 .copyable(selectedEntries.map(\.wrappedValue.content))
             }
             .animation(.easeInOut, value: showSearchPanel)
+            .animation(.easeInOut, value: showReplacePanel)
         }
         .focusedSceneValue(\.entrySelection, $selection)
         .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
@@ -324,6 +367,90 @@ struct FileTableView: View {
         if let proxy {
             withAnimation {
                 proxy.scrollTo(id, anchor: .center)
+            }
+        }
+    }
+
+    private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
+        guard !searchResults.isEmpty else {
+            return
+        }
+
+        var options = String.CompareOptions()
+
+        if !matchCase {
+            options.insert(.caseInsensitive)
+        }
+
+        // copy the result's content
+        var entry = searchResults[searchSelectionIndex]
+
+        // replace the first occurrence
+        if let range = entry.content.range(of: debouncedSearchQuery, options: options) {
+            entry.content.replaceSubrange(range, with: replacement)
+        }
+
+        // update the binding
+        for case let binding in $file.entries where binding.wrappedValue.id == entry.id {
+            binding.wrappedValue.content = entry.content
+        }
+
+        // deselect if no more occurrences are left
+        guard !searchResults.isEmpty else {
+            selection.removeAll()
+
+            return
+        }
+
+        var index = searchSelectionIndex
+
+        // select the first search result if the last has been replaced
+        if index > searchResults.endIndex - 1 {
+            index = searchResults.startIndex
+        }
+
+        let next = searchResults[index].id
+
+        // don't change the selection if the next occurrence is in the same subtitle
+        guard next != entry.id else {
+            return
+        }
+
+        selection = [next]
+
+        if let proxy {
+            withAnimation {
+                proxy.scrollTo(next, anchor: .center)
+            }
+        }
+    }
+
+    private func replaceAllSearchResults() {
+        guard !searchResults.isEmpty else {
+            return
+        }
+
+        // deselect all
+        selection.removeAll()
+
+        // copy search results
+        var entries = searchResults
+        var options = String.CompareOptions()
+
+        if !matchCase {
+            options.insert(.caseInsensitive)
+        }
+
+        // replace all occurrences locally
+        for index in entries.indices {
+            entries[index].content = entries[index].content
+                .replacingOccurrences(of: debouncedSearchQuery, with: replacement, options: options)
+        }
+
+        // update the bindings
+        for binding in $file.entries {
+            if let entry = entries.first(where: { $0.id == binding.wrappedValue.id }) {
+                binding.wrappedValue.content = entry.content
             }
         }
     }
