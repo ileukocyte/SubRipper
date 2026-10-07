@@ -19,7 +19,7 @@ struct FileTableView: View {
     @State private var showSearchPanel = false
     @State private var searchQuery = ""
     @State private var debouncedSearchQuery = ""
-    @State private var searchSelectionIndex: Array.Index = 0
+    @State private var searchSelectionIndex: Array<SRTEntry>.Index = -1
     @State private var matchCase = false
 
     @State private var showReplacePanel = false
@@ -35,174 +35,50 @@ struct FileTableView: View {
         }
     }
 
-    private var searchResults: [SRTEntry] {
+    private var searchMatches: [SearchMatch] {
         guard !debouncedSearchQuery.isEmpty else {
             return []
         }
 
-        return file.entries.filter {
+        var matches = [SearchMatch]()
+
+        for entry in file.entries {
+            if entry.content.isEmpty {
+                continue
+            }
+
+            var searchRange = entry.content.startIndex..<entry.content.endIndex
             var options = String.CompareOptions()
 
             if !matchCase {
                 options.insert(.caseInsensitive)
             }
 
-            return $0.content.range(of: debouncedSearchQuery, options: options) != nil
+            while let range = entry.content[searchRange].range(of: debouncedSearchQuery, options: options) {
+                matches.append(SearchMatch(entryId: entry.id, range: range))
+                searchRange = range.upperBound..<entry.content.endIndex
+            }
         }
+
+        return matches
+    }
+
+    private var matchCountLabel: String {
+        searchMatches.isEmpty ? "0 matches" : "\(searchSelectionIndex + 1)/\(searchMatches.count)"
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 if showSearchPanel {
-                    HStack {
-                        SearchBarView(
-                            query: $searchQuery,
-                            matchCase: $matchCase
-                        ) {
-                            showSearchPanel.toggle()
-                        } onUpArrow: {
-                            selectPreviousSearchResult(scrollProxy: proxy)
-                        } onDownArrow: {
-                            selectNextSearchResult(scrollProxy: proxy)
-                        }
-
-                        HStack {
-                            Stepper(searchResults.isEmpty ? "0 matches" : "\(searchSelectionIndex + 1)/\(searchResults.count)") {
-                                selectPreviousSearchResult(scrollProxy: proxy)
-                            } onDecrement: {
-                                selectNextSearchResult(scrollProxy: proxy)
-                            }
-                            .disabled(searchResults.isEmpty)
-
-                            Button("Done") {
-                                showSearchPanel.toggle()
-                            }
-
-                            Toggle("Replace", isOn: $showReplacePanel)
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    makeSearchPanel(scrollProxy: proxy)
 
                     if showReplacePanel {
-                        HStack {
-                            ReplaceBarView(replacement: $replacement) {
-                                showReplacePanel.toggle()
-                            } onUpArrow: {
-                                selectPreviousSearchResult(scrollProxy: proxy)
-                            } onDownArrow: {
-                                selectNextSearchResult(scrollProxy: proxy)
-                            } onEnter: {
-                                replaceCurrentSearchResult(scrollProxy: proxy)
-                            }
-
-                            Button("Replace") {
-                                replaceCurrentSearchResult(scrollProxy: proxy)
-                            }
-                            .disabled(searchResults.isEmpty)
-
-                            Button("Replace All") {
-                                replaceAllSearchResults()
-                            }
-                            .disabled(searchResults.isEmpty)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
+                        makeReplacePanel(scrollProxy: proxy)
                     }
                 }
 
-                Table(of: SRTEntry.self, selection: $selection) {
-                    TableColumn("Start") {
-                        Text(SRTMarshaler.formatTime($0.startTime))
-                    }
-                    .width(125)
-
-                    TableColumn("End") {
-                        Text(SRTMarshaler.formatTime($0.endTime))
-                    }
-                    .width(125)
-
-                    TableColumn("Subtitle") {
-                        Text(withSearchResultsHighlighted($0.content))
-                            .lineLimit(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.vertical, 2.5)
-                    }
-                } rows: {
-                    ForEach(file.entries) { entry in
-                        TableRow(entry)
-                    }
-                }
-                .task(id: searchQuery) {
-                    guard !searchQuery.isEmpty else {
-                        debouncedSearchQuery = ""
-
-                        return
-                    }
-
-                    try? await Task.sleep(for: .milliseconds(250))
-
-                    guard !Task.isCancelled else {
-                        return
-                    }
-
-                    debouncedSearchQuery = searchQuery
-
-                    guard let first = searchResults.first else {
-                        return
-                    }
-
-                    selection = [first.id]
-
-                    withAnimation {
-                        proxy.scrollTo(first.id, anchor: .center)
-                    }
-                }
-                .onChange(of: showSearchPanel) { _, newValue in
-                    guard newValue else {
-                        showReplacePanel = false
-                        replacement = ""
-
-                        return
-                    }
-
-                    guard !searchQuery.isEmpty, let first = searchResults.first else {
-                        return
-                    }
-
-                    selection = [first.id]
-
-                    withAnimation {
-                        proxy.scrollTo(first.id, anchor: .center)
-                    }
-                }
-                .onChange(of: matchCase) {
-                    guard let first = searchResults.first else {
-                        return
-                    }
-
-                    selection = [first.id]
-
-                    withAnimation {
-                        proxy.scrollTo(first.id, anchor: .center)
-                    }
-                }
-                .onChange(of: selection) { _, newValue in
-                    guard showSearchPanel,
-                          newValue.count == 1,
-                          let selected = newValue.first,
-                          let index = searchResults.firstIndex(where: { $0.id == selected })
-                    else {
-                        searchSelectionIndex = 0
-
-                        return
-                    }
-
-                    searchSelectionIndex = index
-                }
-                .contextMenu(forSelectionType: SRTEntry.ID.self, menu: makeSubtitleContextMenu)
-                .copyable(selectedEntries.map(\.wrappedValue.content))
+                makeSubtitleTable(scrollProxy: proxy)
             }
             .animation(.easeInOut, value: showSearchPanel)
             .animation(.easeInOut, value: showReplacePanel)
@@ -211,43 +87,219 @@ struct FileTableView: View {
         .focusedSceneValue(\.showSubtitleOffsetSheet, $showSubtitleOffsetSheet)
         .focusedSceneValue(\.showLinearCorrectionSheet, $showLinearCorrectionSheet)
         .focusedSceneValue(\.showSearchPanel, $showSearchPanel)
-        .inspector(isPresented: $showSubtitleInspector) {
-            if !selectedEntries.isEmpty {
-                SubtitleInspectorView(entries: selectedEntries) {
-                    selection = Set(file.entries.map(\.id))
-                } deselect: {
-                    selection.removeAll()
+        .inspector(isPresented: $showSubtitleInspector, content: makeSubtitleInspector)
+        .sheet(isPresented: $showSubtitleOffsetSheet, content: makeSubtitleOffsetSheet)
+        .sheet(isPresented: $showLinearCorrectionSheet, content: makeLinearCorrectionSheet)
+    }
+
+    private func makeSearchPanel(scrollProxy proxy: ScrollViewProxy) -> some View {
+        HStack {
+            SearchBarView(
+                query: $searchQuery,
+                matchCase: $matchCase
+            ) {
+                showSearchPanel.toggle()
+            } onUpArrow: {
+                selectPreviousSearchResult()
+            } onDownArrow: {
+                selectNextSearchResult()
+            }
+
+            HStack {
+                Stepper(matchCountLabel) {
+                    selectPreviousSearchResult()
+                } onDecrement: {
+                    selectNextSearchResult()
                 }
-                .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
+                .disabled(searchMatches.isEmpty)
+
+                Button("Done") {
+                    showSearchPanel.toggle()
+                }
+
+                Toggle("Replace", isOn: $showReplacePanel)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+    }
+
+    private func makeReplacePanel(scrollProxy proxy: ScrollViewProxy) -> some View {
+        HStack {
+            ReplaceBarView(replacement: $replacement) {
+                showReplacePanel.toggle()
+            } onUpArrow: {
+                selectPreviousSearchResult()
+            } onDownArrow: {
+                selectNextSearchResult()
+            } onEnter: {
+                replaceCurrentSearchResult()
+            }
+
+            Button("Replace") {
+                replaceCurrentSearchResult()
+            }
+            .disabled(searchMatches.isEmpty)
+
+            Button("Replace All") {
+                replaceAllSearchResults()
+            }
+            .disabled(searchMatches.isEmpty)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+    }
+
+    private func makeSubtitleTable(scrollProxy proxy: ScrollViewProxy) -> some View {
+        Table(of: SRTEntry.self, selection: $selection) {
+            TableColumn("Start") {
+                Text(SRTMarshaler.formatTime($0.startTime))
+            }
+            .width(125)
+
+            TableColumn("End") {
+                Text(SRTMarshaler.formatTime($0.endTime))
+            }
+            .width(125)
+
+            TableColumn("Subtitle") {
+                Text(withSearchResultsHighlighted(entry: $0))
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 2.5)
+            }
+        } rows: {
+            ForEach(file.entries) { entry in
+                TableRow(entry)
+            }
+        }
+        .task(id: searchQuery) {
+            await updateDebouncedSearchQuery()
+        }
+        .onChange(of: searchSelectionIndex, { _, newValue in
+            guard !searchMatches.isEmpty, newValue >= 0 else {
+                return
+            }
+
+            let matchEntryId = searchMatches[newValue].entryId
+
+            selection = [matchEntryId]
+
+            withAnimation {
+                proxy.scrollTo(matchEntryId, anchor: .center)
+            }
+        })
+        .onChange(of: showSearchPanel) { _, newValue in
+            guard newValue else {
+                showReplacePanel = false
+                replacement = ""
+                searchSelectionIndex = -1
+
+                return
+            }
+
+            guard !searchQuery.isEmpty else {
+                return
+            }
+
+            searchSelectionIndex = 0
+        }
+        .onChange(of: matchCase) {
+            guard !searchQuery.isEmpty else {
+                return
+            }
+
+            // force scrolling if the first result is already selected
+            if searchSelectionIndex == 0 {
+                let matchEntryId = searchMatches[searchSelectionIndex].entryId
+
+                selection = [matchEntryId]
+
+                withAnimation {
+                    proxy.scrollTo(matchEntryId, anchor: .center)
+                }
             } else {
-                ContentUnavailableView {
-                    Image(systemName: "filemenu.and.selection")
-                } description: {
-                    Text("Select a subtitle to edit")
-                }
-                .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
+                searchSelectionIndex = 0
             }
         }
-        .sheet(isPresented: $showSubtitleOffsetSheet) {
-            Section {
-                SubtitleOffsetView(entries: selectedEntries, shouldDismiss: true)
-            } header: {
-                Text("Shift Time")
-                    .font(.headline)
-            }
-            .padding()
-            .frame(minWidth: 300, maxWidth: 300)
+//        .onChange(of: selection) { _, newValue in
+//            guard !searchMatches.isEmpty, newValue.count == 1 else {
+//                return
+//            }
+//
+//            guard let selectedEntryId = newValue.first,
+//                  let matchIndex = searchMatches.firstIndex(where: { $0.entryId == selectedEntryId })
+//            else {
+//                return
+//            }
+//
+//            searchSelectionIndex = matchIndex
+//        }
+        .contextMenu(forSelectionType: SRTEntry.ID.self, menu: makeSubtitleContextMenu)
+        .copyable(selectedEntries.map(\.wrappedValue.content))
+    }
+
+    private func updateDebouncedSearchQuery() async {
+        guard !searchQuery.isEmpty else {
+            debouncedSearchQuery = ""
+
+            return
         }
-        .sheet(isPresented: $showLinearCorrectionSheet) {
-            Section {
-                LinearCorrectionSheetView(file: file)
-            } header: {
-                Text("Linear Correction")
-                    .font(.headline)
-            }
-            .padding()
-            .frame(minWidth: 600, maxWidth: 600)
+
+        try? await Task.sleep(for: .milliseconds(250))
+
+        guard !Task.isCancelled else {
+            return
         }
+
+        debouncedSearchQuery = searchQuery
+
+        guard !searchMatches.isEmpty else {
+            return
+        }
+
+        searchSelectionIndex = 0
+    }
+
+    @ViewBuilder
+    private func makeSubtitleInspector() -> some View {
+        if !selectedEntries.isEmpty {
+            SubtitleInspectorView(entries: selectedEntries) {
+                selection = Set(file.entries.map(\.id))
+            } deselect: {
+                selection.removeAll()
+            }
+            .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
+        } else {
+            ContentUnavailableView {
+                Image(systemName: "filemenu.and.selection")
+            } description: {
+                Text("Select a subtitle to edit")
+            }
+            .inspectorColumnWidth(min: 250, ideal: 300, max: 350)
+        }
+    }
+
+    private func makeSubtitleOffsetSheet() -> some View {
+        Section {
+            SubtitleOffsetView(entries: selectedEntries, shouldDismiss: true)
+        } header: {
+            Text("Shift Time")
+                .font(.headline)
+        }
+        .padding()
+        .frame(minWidth: 300, maxWidth: 300)
+    }
+
+    private func makeLinearCorrectionSheet() -> some View {
+        Section {
+            LinearCorrectionSheetView(file: file)
+        } header: {
+            Text("Linear Correction")
+                .font(.headline)
+        }
+        .padding()
+        .frame(minWidth: 600, maxWidth: 600)
     }
 
     @ViewBuilder
@@ -325,143 +377,84 @@ struct FileTableView: View {
         }
     }
 
-    private func selectPreviousSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
-        guard !searchResults.isEmpty else {
+    private func selectPreviousSearchResult() {
+        guard !searchMatches.isEmpty else {
             return
         }
 
-        var index = searchSelectionIndex
-
-        if index > searchResults.startIndex {
-            index -= 1
+        if searchSelectionIndex > searchMatches.startIndex {
+            searchSelectionIndex -= 1
         } else {
-            index = searchResults.endIndex - 1
-        }
-
-        let id = searchResults[index].id
-        selection = [id]
-
-        if let proxy {
-            withAnimation {
-                proxy.scrollTo(id, anchor: .center)
-            }
+            searchSelectionIndex = searchMatches.endIndex - 1
         }
     }
 
-    private func selectNextSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
-        guard !searchResults.isEmpty else {
+    private func selectNextSearchResult() {
+        guard !searchMatches.isEmpty else {
             return
         }
 
-        var index = searchSelectionIndex
-
-        if index < searchResults.endIndex - 1 {
-            index += 1
+        if searchSelectionIndex < searchMatches.endIndex - 1 {
+            searchSelectionIndex += 1
         } else {
-            index = searchResults.startIndex
-        }
-
-        let id = searchResults[index].id
-        selection = [id]
-
-        if let proxy {
-            withAnimation {
-                proxy.scrollTo(id, anchor: .center)
-            }
+            searchSelectionIndex = searchMatches.startIndex
         }
     }
 
-    private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
-        guard !searchResults.isEmpty else {
+    private func replaceCurrentSearchResult() {
+        guard !searchMatches.isEmpty else {
             return
         }
 
-        var options = String.CompareOptions()
+        let match = searchMatches[searchSelectionIndex]
 
-        if !matchCase {
-            options.insert(.caseInsensitive)
-        }
-
-        // copy the result's content
-        var entry = searchResults[searchSelectionIndex]
-
-        // replace the first occurrence
-        if let range = entry.content.range(of: debouncedSearchQuery, options: options) {
-            entry.content.replaceSubrange(range, with: replacement)
-        }
-
-        // update the binding
-        for case let binding in $file.entries where binding.wrappedValue.id == entry.id {
-            binding.wrappedValue.content = entry.content
+        if let entry = $file.entries.first(where: { $0.wrappedValue.id == match.entryId }) {
+            entry.wrappedValue.content.replaceSubrange(match.range, with: replacement)
         }
 
         // deselect if no more occurrences are left
-        guard !searchResults.isEmpty else {
+        guard !searchMatches.isEmpty else {
             selection.removeAll()
 
             return
         }
 
-        var index = searchSelectionIndex
-
         // select the first search result if the last has been replaced
-        if index > searchResults.endIndex - 1 {
-            index = searchResults.startIndex
-        }
-
-        let next = searchResults[index].id
-
-        // don't change the selection if the next occurrence is in the same subtitle
-        guard next != entry.id else {
-            return
-        }
-
-        selection = [next]
-
-        if let proxy {
-            withAnimation {
-                proxy.scrollTo(next, anchor: .center)
-            }
+        if searchSelectionIndex > searchMatches.endIndex - 1 {
+            searchSelectionIndex = searchMatches.startIndex
         }
     }
 
     private func replaceAllSearchResults() {
-        guard !searchResults.isEmpty else {
+        guard !searchMatches.isEmpty else {
             return
         }
 
         // deselect all
         selection.removeAll()
 
-        // copy search results
-        var entries = searchResults
+        let entryIds = Set(searchMatches.map { $0.entryId })
+
         var options = String.CompareOptions()
 
         if !matchCase {
             options.insert(.caseInsensitive)
         }
 
-        // replace all occurrences locally
-        for index in entries.indices {
-            entries[index].content = entries[index].content
+        for entry in $file.entries where entryIds.contains(entry.id) {
+            entry.wrappedValue.content = entry.wrappedValue.content
                 .replacingOccurrences(of: debouncedSearchQuery, with: replacement, options: options)
-        }
-
-        // update the bindings
-        for binding in $file.entries {
-            if let entry = entries.first(where: { $0.id == binding.wrappedValue.id }) {
-                binding.wrappedValue.content = entry.content
-            }
         }
     }
 
     private func withSearchResultsHighlighted(
-        _ text: String,
-        backgroundColor color: Color = .yellow.opacity(0.3)
+        entry: SRTEntry,
+        backgroundColor color: Color = .yellow.opacity(0.3),
+        currentSelectionColor selectionColor: Color = .yellow.opacity(0.6)
     ) -> AttributedString {
-        var attributed = AttributedString(text)
+        var attributed = AttributedString(entry.content)
 
-        guard !debouncedSearchQuery.isEmpty, showSearchPanel else {
+        guard showSearchPanel, !searchMatches.isEmpty else {
             return attributed
         }
 
@@ -473,12 +466,27 @@ struct FileTableView: View {
         }
 
         while let range = attributed[searchRange].range(of: debouncedSearchQuery, options: options) {
-            attributed[range].backgroundColor = color
+            let selectedMatch = searchMatches[searchSelectionIndex]
+
+            if let stringRange = Range<String.Index>(range, in: entry.content),
+               stringRange == selectedMatch.range,
+               entry.id == selectedMatch.entryId {
+                attributed[range].backgroundColor = selectionColor
+            } else {
+                attributed[range].backgroundColor = color
+            }
+
             searchRange = range.upperBound..<attributed.endIndex
         }
 
         return attributed
     }
+}
+
+fileprivate struct SearchMatch: Identifiable {
+    let id = UUID()
+    let entryId: UUID
+    let range: Range<String.Index>
 }
 
 #Preview {
