@@ -71,7 +71,7 @@ struct FileTableView: View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 if showSearchPanel {
-                    makeSearchPanel()
+                    makeSearchPanel(scrollProxy: proxy)
 
                     if showReplacePanel {
                         makeReplacePanel(scrollProxy: proxy)
@@ -92,7 +92,7 @@ struct FileTableView: View {
         .sheet(isPresented: $showLinearCorrectionSheet, content: makeLinearCorrectionSheet)
     }
 
-    private func makeSearchPanel() -> some View {
+    private func makeSearchPanel(scrollProxy proxy: ScrollViewProxy) -> some View {
         HStack {
             SearchBarView(
                 query: $searchQuery,
@@ -100,16 +100,16 @@ struct FileTableView: View {
             ) {
                 showSearchPanel.toggle()
             } onUpArrow: {
-                selectPreviousSearchResult()
+                selectPreviousSearchResult(scrollProxy: proxy)
             } onDownArrow: {
-                selectNextSearchResult()
+                selectNextSearchResult(scrollProxy: proxy)
             }
 
             HStack {
                 Stepper(matchCountLabel) {
-                    selectPreviousSearchResult()
+                    selectPreviousSearchResult(scrollProxy: proxy)
                 } onDecrement: {
-                    selectNextSearchResult()
+                    selectNextSearchResult(scrollProxy: proxy)
                 }
                 .disabled(searchMatches.isEmpty)
 
@@ -124,14 +124,14 @@ struct FileTableView: View {
         .padding(.vertical, 5)
     }
 
-    private func makeReplacePanel(scrollProxy proxy: ScrollViewProxy? = nil) -> some View {
+    private func makeReplacePanel(scrollProxy proxy: ScrollViewProxy) -> some View {
         HStack {
             ReplaceBarView(replacement: $replacement) {
                 showReplacePanel.toggle()
             } onUpArrow: {
-                selectPreviousSearchResult()
+                selectPreviousSearchResult(scrollProxy: proxy)
             } onDownArrow: {
-                selectNextSearchResult()
+                selectNextSearchResult(scrollProxy: proxy)
             } onEnter: {
                 replaceCurrentSearchResult(scrollProxy: proxy)
             }
@@ -223,7 +223,7 @@ struct FileTableView: View {
         .copyable(selectedEntries.map(\.wrappedValue.content))
     }
 
-    private func updateDebouncedSearchQuery(scrollProxy proxy: ScrollViewProxy? = nil) async {
+    private func updateDebouncedSearchQuery(scrollProxy proxy: ScrollViewProxy) async {
         guard !searchQuery.isEmpty else {
             debouncedSearchQuery = ""
 
@@ -242,7 +242,7 @@ struct FileTableView: View {
             return
         }
 
-        if searchSelectionIndex == 0, let proxy {
+        if searchSelectionIndex == 0 {
             focusCurrentMatch(scrollProxy: proxy)
         } else {
             searchSelectionIndex = 0
@@ -365,7 +365,7 @@ struct FileTableView: View {
         }
     }
 
-    private func selectPreviousSearchResult() {
+    private func selectPreviousSearchResult(scrollProxy proxy: ScrollViewProxy) {
         let matches = searchMatches
 
         guard !matches.isEmpty else {
@@ -373,11 +373,16 @@ struct FileTableView: View {
         }
 
         let current = min(searchSelectionIndex, matches.count - 1)
+        let next = current > 0 ? current - 1 : matches.count - 1
 
-        searchSelectionIndex = current > 0 ? current - 1 : matches.count - 1
+        if searchSelectionIndex == next {
+            focusCurrentMatch(scrollProxy: proxy)
+        } else {
+            searchSelectionIndex = next
+        }
     }
 
-    private func selectNextSearchResult() {
+    private func selectNextSearchResult(scrollProxy proxy: ScrollViewProxy) {
         let matches = searchMatches
 
         guard !matches.isEmpty else {
@@ -385,12 +390,17 @@ struct FileTableView: View {
         }
 
         let current = min(searchSelectionIndex, matches.count - 1)
+        let next = current < matches.count - 1 ? current + 1 : 0
 
-        searchSelectionIndex = current < matches.count - 1 ? current + 1 : 0
+        if searchSelectionIndex == next {
+            focusCurrentMatch(scrollProxy: proxy)
+        } else {
+            searchSelectionIndex = next
+        }
     }
 
     // TODO fix a stuck searchSelectionIndex when the replacement contains the query itself
-    private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
+    private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy) {
         let matches = searchMatches
 
         guard matches.indices.contains(searchSelectionIndex) else {
@@ -414,7 +424,7 @@ struct FileTableView: View {
         // select the first search result if the last has been replaced
         if searchSelectionIndex > searchMatches.endIndex - 1 {
             searchSelectionIndex = searchMatches.startIndex
-        } else if let proxy {
+        } else {
             // force scrolling because the index didn't change
             focusCurrentMatch(scrollProxy: proxy)
         }
