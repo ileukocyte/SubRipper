@@ -19,7 +19,7 @@ struct FileTableView: View {
     @State private var showSearchPanel = false
     @State private var searchQuery = ""
     @State private var debouncedSearchQuery = ""
-    @State private var searchSelectionIndex: Array<SRTEntry>.Index = -1
+    @State private var searchSelectionIndex = -1
     @State private var matchCase = false
 
     @State private var showReplacePanel = false
@@ -64,14 +64,14 @@ struct FileTableView: View {
     }
 
     private var matchCountLabel: String {
-        searchMatches.isEmpty ? "0 matches" : "\(searchSelectionIndex + 1)/\(searchMatches.count)"
+        searchMatches.indices.contains(searchSelectionIndex) ? "\(searchSelectionIndex + 1)/\(searchMatches.count)" : "0 matches"
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 if showSearchPanel {
-                    makeSearchPanel(scrollProxy: proxy)
+                    makeSearchPanel()
 
                     if showReplacePanel {
                         makeReplacePanel(scrollProxy: proxy)
@@ -92,7 +92,7 @@ struct FileTableView: View {
         .sheet(isPresented: $showLinearCorrectionSheet, content: makeLinearCorrectionSheet)
     }
 
-    private func makeSearchPanel(scrollProxy proxy: ScrollViewProxy) -> some View {
+    private func makeSearchPanel() -> some View {
         HStack {
             SearchBarView(
                 query: $searchQuery,
@@ -124,7 +124,7 @@ struct FileTableView: View {
         .padding(.vertical, 5)
     }
 
-    private func makeReplacePanel(scrollProxy proxy: ScrollViewProxy) -> some View {
+    private func makeReplacePanel(scrollProxy proxy: ScrollViewProxy? = nil) -> some View {
         HStack {
             ReplaceBarView(replacement: $replacement) {
                 showReplacePanel.toggle()
@@ -133,11 +133,11 @@ struct FileTableView: View {
             } onDownArrow: {
                 selectNextSearchResult()
             } onEnter: {
-                replaceCurrentSearchResult()
+                replaceCurrentSearchResult(scrollProxy: proxy)
             }
 
             Button("Replace") {
-                replaceCurrentSearchResult()
+                replaceCurrentSearchResult(scrollProxy: proxy)
             }
             .disabled(searchMatches.isEmpty)
 
@@ -174,20 +174,10 @@ struct FileTableView: View {
             }
         }
         .task(id: searchQuery) {
-            await updateDebouncedSearchQuery()
+            await updateDebouncedSearchQuery(scrollProxy: proxy)
         }
         .onChange(of: searchSelectionIndex, { _, newValue in
-            guard !searchMatches.isEmpty, newValue >= 0 else {
-                return
-            }
-
-            let matchEntryId = searchMatches[newValue].entryId
-
-            selection = [matchEntryId]
-
-            withAnimation {
-                proxy.scrollTo(matchEntryId, anchor: .center)
-            }
+            focusCurrentMatch(scrollProxy: proxy)
         })
         .onChange(of: showSearchPanel) { _, newValue in
             guard newValue else {
@@ -205,19 +195,13 @@ struct FileTableView: View {
             searchSelectionIndex = 0
         }
         .onChange(of: matchCase) {
-            guard !searchQuery.isEmpty else {
+            guard !searchMatches.isEmpty else {
                 return
             }
 
             // force scrolling if the first result is already selected
             if searchSelectionIndex == 0 {
-                let matchEntryId = searchMatches[searchSelectionIndex].entryId
-
-                selection = [matchEntryId]
-
-                withAnimation {
-                    proxy.scrollTo(matchEntryId, anchor: .center)
-                }
+                focusCurrentMatch(scrollProxy: proxy)
             } else {
                 searchSelectionIndex = 0
             }
@@ -239,7 +223,7 @@ struct FileTableView: View {
         .copyable(selectedEntries.map(\.wrappedValue.content))
     }
 
-    private func updateDebouncedSearchQuery() async {
+    private func updateDebouncedSearchQuery(scrollProxy proxy: ScrollViewProxy? = nil) async {
         guard !searchQuery.isEmpty else {
             debouncedSearchQuery = ""
 
@@ -258,7 +242,11 @@ struct FileTableView: View {
             return
         }
 
-        searchSelectionIndex = 0
+        if searchSelectionIndex == 0, let proxy {
+            focusCurrentMatch(scrollProxy: proxy)
+        } else {
+            searchSelectionIndex = 0
+        }
     }
 
     @ViewBuilder
@@ -378,35 +366,38 @@ struct FileTableView: View {
     }
 
     private func selectPreviousSearchResult() {
-        guard !searchMatches.isEmpty else {
+        let matches = searchMatches
+
+        guard !matches.isEmpty else {
             return
         }
 
-        if searchSelectionIndex > searchMatches.startIndex {
-            searchSelectionIndex -= 1
-        } else {
-            searchSelectionIndex = searchMatches.endIndex - 1
-        }
+        let current = min(searchSelectionIndex, matches.count - 1)
+
+        searchSelectionIndex = current > 0 ? current - 1 : matches.count - 1
     }
 
     private func selectNextSearchResult() {
-        guard !searchMatches.isEmpty else {
+        let matches = searchMatches
+
+        guard !matches.isEmpty else {
             return
         }
 
-        if searchSelectionIndex < searchMatches.endIndex - 1 {
-            searchSelectionIndex += 1
-        } else {
-            searchSelectionIndex = searchMatches.startIndex
-        }
+        let current = min(searchSelectionIndex, matches.count - 1)
+
+        searchSelectionIndex = current < matches.count - 1 ? current + 1 : 0
     }
 
-    private func replaceCurrentSearchResult() {
-        guard !searchMatches.isEmpty else {
+    // TODO fix a stuck searchSelectionIndex when the replacement contains the query itself
+    private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy? = nil) {
+        let matches = searchMatches
+
+        guard matches.indices.contains(searchSelectionIndex) else {
             return
         }
 
-        let match = searchMatches[searchSelectionIndex]
+        let match = matches[searchSelectionIndex]
 
         if let entry = $file.entries.first(where: { $0.wrappedValue.id == match.entryId }) {
             entry.wrappedValue.content.replaceSubrange(match.range, with: replacement)
@@ -415,6 +406,7 @@ struct FileTableView: View {
         // deselect if no more occurrences are left
         guard !searchMatches.isEmpty else {
             selection.removeAll()
+            searchSelectionIndex = 0
 
             return
         }
@@ -422,6 +414,9 @@ struct FileTableView: View {
         // select the first search result if the last has been replaced
         if searchSelectionIndex > searchMatches.endIndex - 1 {
             searchSelectionIndex = searchMatches.startIndex
+        } else if let proxy {
+            // force scrolling because the index didn't change
+            focusCurrentMatch(scrollProxy: proxy)
         }
     }
 
@@ -445,6 +440,24 @@ struct FileTableView: View {
             entry.wrappedValue.content = entry.wrappedValue.content
                 .replacingOccurrences(of: debouncedSearchQuery, with: replacement, options: options)
         }
+
+        searchSelectionIndex = 0
+    }
+
+    private func focusCurrentMatch(scrollProxy proxy: ScrollViewProxy) {
+        let matches = searchMatches
+
+        guard matches.indices.contains(searchSelectionIndex) else {
+            return
+        }
+
+        let matchEntryId = matches[searchSelectionIndex].entryId
+
+        selection = [matchEntryId]
+
+        withAnimation {
+            proxy.scrollTo(matchEntryId, anchor: .center)
+        }
     }
 
     private func withSearchResultsHighlighted(
@@ -452,9 +465,11 @@ struct FileTableView: View {
         backgroundColor color: Color = .yellow.opacity(0.3),
         currentSelectionColor selectionColor: Color = .yellow.opacity(0.6)
     ) -> AttributedString {
+        let matches = searchMatches
+
         var attributed = AttributedString(entry.content)
 
-        guard showSearchPanel, !searchMatches.isEmpty else {
+        guard showSearchPanel, matches.indices.contains(searchSelectionIndex) else {
             return attributed
         }
 
@@ -465,12 +480,12 @@ struct FileTableView: View {
             options.insert(.caseInsensitive)
         }
 
-        while let range = attributed[searchRange].range(of: debouncedSearchQuery, options: options) {
-            let selectedMatch = searchMatches[searchSelectionIndex]
+        let selectedMatch = matches[searchSelectionIndex]
 
-            if let stringRange = Range<String.Index>(range, in: entry.content),
-               stringRange == selectedMatch.range,
-               entry.id == selectedMatch.entryId {
+        while let range = attributed[searchRange].range(of: debouncedSearchQuery, options: options) {
+            if entry.id == selectedMatch.entryId,
+               let stringRange = Range<String.Index>(range, in: entry.content),
+               stringRange == selectedMatch.range {
                 attributed[range].backgroundColor = selectionColor
             } else {
                 attributed[range].backgroundColor = color
