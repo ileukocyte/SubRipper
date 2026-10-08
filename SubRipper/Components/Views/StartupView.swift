@@ -28,35 +28,7 @@ struct StartupView: View {
                 Text("Open an .srt file to get started")
                     .foregroundStyle(.secondary)
 
-                Button("Open", systemImage: "arrow.up.forward") {
-                    FilePanels.openNSOpenPanel { urls, encoding in
-                        var isStartupOpen = true
-
-                        for url in urls {
-                            let accessed = url.startAccessingSecurityScopedResource()
-
-                            do {
-                                let file = try store.load(url: url, encoding: encoding)
-
-                                if isStartupOpen {
-                                    NSApp.closeWindow(id: "startup")
-                                    isStartupOpen = false
-                                }
-
-                                openWindow(id: "file", value: file.id)
-                            } catch {
-                                if accessed {
-                                    url.stopAccessingSecurityScopedResource()
-                                }
-
-                                Alerts.showDefaultErrorAlert(for: error)
-                            }
-                        }
-                    }
-                }
-                .buttonStyle(.glassProminent)
-                .tint(.accentColor)
-                .controlSize(.large)
+                makeOpenFileButton()
 
                 Text("or drag a file anywhere into this window")
                     .font(.footnote)
@@ -100,6 +72,38 @@ struct StartupView: View {
                 }
             }
         }
+    }
+
+    private func makeOpenFileButton() -> some View {
+        Button("Open", systemImage: "arrow.up.forward") {
+            FilePanels.openNSOpenPanel { urls, encoding in
+                var isStartupOpen = true
+
+                for url in urls {
+                    let accessed = url.startAccessingSecurityScopedResource()
+
+                    do {
+                        let file = try store.load(url: url, encoding: encoding)
+
+                        if isStartupOpen {
+                            NSApp.closeWindow(id: "startup")
+                            isStartupOpen = false
+                        }
+
+                        openWindow(id: "file", value: file.id)
+                    } catch {
+                        if accessed {
+                            url.stopAccessingSecurityScopedResource()
+                        }
+
+                        Alerts.showDefaultErrorAlert(for: error)
+                    }
+                }
+            }
+        }
+        .buttonStyle(.glassProminent)
+        .tint(.accentColor)
+        .controlSize(.large)
     }
 }
 

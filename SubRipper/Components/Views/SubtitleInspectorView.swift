@@ -43,63 +43,67 @@ struct SubtitleInspectorView: View {
                     SubtitleTextEditorView(content: entry.content)
                         .id(entry.wrappedValue.id)
                 }
-                
-                Section(header: Text("Timing")) {
-                    Button {
-                        startTimePopover.toggle()
-                    } label: {
-                        LabeledContent("Start") {
-                            Text(SRTMarshaler.formatTime(entry.wrappedValue.startTime))
-                                .font(.system(.body, design: .monospaced))
-                        }
-                        .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .onHover { inView in
-                        if inView {
-                            NSCursor.pointingHand.push()
-                        } else {
-                            NSCursor.pop()
-                        }
-                    }
-                    .popover(isPresented: $startTimePopover) {
-                        TimestampPopoverView(timestamp: entry.startTime, heading: "Start Time")
-                            .id(entry.wrappedValue.id)
-                    }
-                    
-                    Button {
-                        endTimePopover.toggle()
-                    } label: {
-                        LabeledContent("End") {
-                            Text(SRTMarshaler.formatTime(entry.wrappedValue.endTime))
-                                .font(.system(.body, design: .monospaced))
-                        }
-                        .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .onHover { inView in
-                        if inView {
-                            NSCursor.pointingHand.push()
-                        } else {
-                            NSCursor.pop()
-                        }
-                    }
-                    .popover(isPresented: $endTimePopover) {
-                        TimestampPopoverView(timestamp: entry.endTime, heading: "End Time")
-                            .id(entry.wrappedValue.id)
-                    }
-                }
+
+                makeTimingSection(for: entry)
             }
 
             Section(header: Text("Offset")) {
                 LabeledContent {
                     SubtitleOffsetView(entries: entries, shouldDismiss: false)
                 } label: {
-                    
+
                 }
             }
         }
         .padding(10)
+    }
+
+    private func makeTimingSection(for entry: Binding<SRTEntry>) -> some View {
+        Section(header: Text("Timing")) {
+            Button {
+                startTimePopover.toggle()
+            } label: {
+                LabeledContent("Start") {
+                    Text(SRTMarshaler.formatTime(entry.wrappedValue.startTime))
+                        .font(.system(.body, design: .monospaced))
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .onHover { inView in
+                if inView {
+                    NSCursor.pointingHand.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .popover(isPresented: $startTimePopover) {
+                TimestampPopoverView(timestamp: entry.startTime, heading: "Start Time")
+                    .id(entry.wrappedValue.id)
+            }
+
+            Button {
+                endTimePopover.toggle()
+            } label: {
+                LabeledContent("End") {
+                    Text(SRTMarshaler.formatTime(entry.wrappedValue.endTime))
+                        .font(.system(.body, design: .monospaced))
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .onHover { inView in
+                if inView {
+                    NSCursor.pointingHand.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .popover(isPresented: $endTimePopover) {
+                TimestampPopoverView(timestamp: entry.endTime, heading: "End Time")
+                    .id(entry.wrappedValue.id)
+            }
+        }
     }
 }
 
