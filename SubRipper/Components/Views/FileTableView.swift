@@ -399,34 +399,45 @@ struct FileTableView: View {
         }
     }
 
-    // TODO fix a stuck searchSelectionIndex when the replacement contains the query itself
     private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy) {
-        let matches = searchMatches
+        var matches = searchMatches
 
-        guard matches.indices.contains(searchSelectionIndex) else {
+        guard !debouncedSearchQuery.isEmpty, matches.indices.contains(searchSelectionIndex) else {
             return
         }
 
         let match = matches[searchSelectionIndex]
 
-        if let entry = $file.entries.first(where: { $0.wrappedValue.id == match.entryId }) {
-            entry.wrappedValue.content.replaceSubrange(match.range, with: replacement)
+        guard let entryIndex = file.entries.firstIndex(where: { $0.id == match.entryId }) else {
+            return
         }
 
+        let offset = countSubstringOcurrences(of: debouncedSearchQuery, in: replacement)
+
+        file.entries[entryIndex].content.replaceSubrange(match.range, with: replacement)
+
+        matches = searchMatches
+
         // deselect if no more occurrences are left
-        guard !searchMatches.isEmpty else {
+        guard !matches.isEmpty else {
             selection.removeAll()
             searchSelectionIndex = 0
 
             return
         }
 
+        var index = searchSelectionIndex + offset
+
         // select the first search result if the last has been replaced
-        if searchSelectionIndex > searchMatches.endIndex - 1 {
-            searchSelectionIndex = searchMatches.startIndex
-        } else {
+        if index > matches.endIndex - 1 {
+            index = matches.startIndex
+        }
+
+        if index == searchSelectionIndex {
             // force scrolling because the index didn't change
             focusCurrentMatch(scrollProxy: proxy)
+        } else {
+            searchSelectionIndex = index
         }
     }
 
@@ -452,6 +463,23 @@ struct FileTableView: View {
         }
 
         searchSelectionIndex = 0
+    }
+
+    private func countSubstringOcurrences(of substring: String, in value: String) -> Int {
+        var count = 0
+        var searchRange = value.startIndex..<value.endIndex
+        var options = String.CompareOptions()
+
+        if !matchCase {
+            options.insert(.caseInsensitive)
+        }
+
+        while let range = value[searchRange].range(of: substring, options: options) {
+            count += 1
+            searchRange = range.upperBound..<value.endIndex
+        }
+
+        return count
     }
 
     private func focusCurrentMatch(scrollProxy proxy: ScrollViewProxy) {
