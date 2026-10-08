@@ -48,13 +48,8 @@ struct FileTableView: View {
             }
 
             var searchRange = entry.content.startIndex..<entry.content.endIndex
-            var options = String.CompareOptions()
 
-            if !matchCase {
-                options.insert(.caseInsensitive)
-            }
-
-            while let range = entry.content[searchRange].range(of: debouncedSearchQuery, options: options) {
+            while let range = entry.content[searchRange].range(of: debouncedSearchQuery, options: searchOptions) {
                 matches.append(SearchMatch(entryId: entry.id, range: range))
                 searchRange = range.upperBound..<entry.content.endIndex
             }
@@ -63,10 +58,21 @@ struct FileTableView: View {
         return matches
     }
 
+    private var searchOptions: String.CompareOptions {
+        var options = String.CompareOptions()
+
+        if !matchCase {
+            options.insert(.caseInsensitive)
+        }
+
+        return options
+    }
+
     private var matchCountLabel: String {
         searchMatches.indices.contains(searchSelectionIndex) ? "\(searchSelectionIndex + 1)/\(searchMatches.count)" : "0 matches"
     }
 
+    // MARK: - view builders
     var body: some View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
@@ -206,6 +212,7 @@ struct FileTableView: View {
                 searchSelectionIndex = 0
             }
         }
+        // TODO: implement search match index updates on MANUAL selection change
 //        .onChange(of: selection) { _, newValue in
 //            guard !searchMatches.isEmpty, newValue.count == 1 else {
 //                return
@@ -221,32 +228,6 @@ struct FileTableView: View {
 //        }
         .contextMenu(forSelectionType: SRTEntry.ID.self, menu: makeSubtitleContextMenu)
         .copyable(selectedEntries.map(\.wrappedValue.content))
-    }
-
-    private func updateDebouncedSearchQuery(scrollProxy proxy: ScrollViewProxy) async {
-        guard !searchQuery.isEmpty else {
-            debouncedSearchQuery = ""
-
-            return
-        }
-
-        try? await Task.sleep(for: .milliseconds(250))
-
-        guard !Task.isCancelled else {
-            return
-        }
-
-        debouncedSearchQuery = searchQuery
-
-        guard !searchMatches.isEmpty else {
-            return
-        }
-
-        if searchSelectionIndex == 0 {
-            focusCurrentMatch(scrollProxy: proxy)
-        } else {
-            searchSelectionIndex = 0
-        }
     }
 
     @ViewBuilder
@@ -306,62 +287,97 @@ struct FileTableView: View {
         }
 
         if !menuEntries.isEmpty {
-            // menu items for a single subtitle
             if menuEntries.count == 1, let entry = menuEntries.first {
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(entry.content, forType: .string)
-                } label: {
-                    Label("Copy Subtitle", systemImage: "doc.on.doc")
-                }
-
-                Divider()
-
-                Button {
-                    withAnimation {
-                        guard let newEntry = file.insertEntry(after: entry) else {
-                            return
-                        }
-
-                        selection = [newEntry.id]
-                    }
-                } label: {
-                    Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
-                }
-
-                Button {
-                    withAnimation {
-                        guard let newEntry = file.insertEntry(before: entry) else {
-                            return
-                        }
-
-                        selection = [newEntry.id]
-                    }
-                } label: {
-                    Label("Insert Above", systemImage: "square.topthird.inset.filled")
-                }
+                makeSingleEntrySubmenu(for: entry)
 
                 Divider()
             }
 
-            // menu items for multiple subtitles
-            Button {
-                showSubtitleOffsetSheet.toggle()
-            } label: {
-                Label("Shift Time", systemImage: "timer")
-            }
+            makeMultipleEntriesSubmenu(for: menuEntries)
+        }
+    }
 
-            Divider()
+    @ViewBuilder
+    private func makeSingleEntrySubmenu(for entry: SRTEntry) -> some View {
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(entry.content, forType: .string)
+        } label: {
+            Label("Copy Subtitle", systemImage: "doc.on.doc")
+        }
 
-            Button(role: .destructive) {
-                withAnimation {
-                    file.deleteAll(entries: menuEntries)
+        Divider()
+
+        Button {
+            withAnimation {
+                guard let newEntry = file.insertEntry(after: entry) else {
+                    return
                 }
 
-                selection.removeAll()
-            } label: {
-                Label("Delete", systemImage: "trash")
+                selection = [newEntry.id]
             }
+        } label: {
+            Label("Insert Below", systemImage: "square.bottomthird.inset.filled")
+        }
+
+        Button {
+            withAnimation {
+                guard let newEntry = file.insertEntry(before: entry) else {
+                    return
+                }
+
+                selection = [newEntry.id]
+            }
+        } label: {
+            Label("Insert Above", systemImage: "square.topthird.inset.filled")
+        }
+    }
+
+    @ViewBuilder
+    private func makeMultipleEntriesSubmenu(for entries: [SRTEntry]) -> some View {
+        Button {
+            showSubtitleOffsetSheet.toggle()
+        } label: {
+            Label("Shift Time", systemImage: "timer")
+        }
+
+        Divider()
+
+        Button(role: .destructive) {
+            withAnimation {
+                file.deleteAll(entries: entries)
+            }
+
+            selection.removeAll()
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+    }
+
+    // MARK: - search actions
+    private func updateDebouncedSearchQuery(scrollProxy proxy: ScrollViewProxy) async {
+        guard !searchQuery.isEmpty else {
+            debouncedSearchQuery = ""
+
+            return
+        }
+
+        try? await Task.sleep(for: .milliseconds(250))
+
+        guard !Task.isCancelled else {
+            return
+        }
+
+        debouncedSearchQuery = searchQuery
+
+        guard !searchMatches.isEmpty else {
+            return
+        }
+
+        if searchSelectionIndex == 0 {
+            focusCurrentMatch(scrollProxy: proxy)
+        } else {
+            searchSelectionIndex = 0
         }
     }
 
@@ -399,6 +415,7 @@ struct FileTableView: View {
         }
     }
 
+    // MARK: - replace actions
     private func replaceCurrentSearchResult(scrollProxy proxy: ScrollViewProxy) {
         var matches = searchMatches
 
@@ -451,30 +468,20 @@ struct FileTableView: View {
 
         let entryIds = Set(searchMatches.map { $0.entryId })
 
-        var options = String.CompareOptions()
-
-        if !matchCase {
-            options.insert(.caseInsensitive)
-        }
-
         for entry in $file.entries where entryIds.contains(entry.id) {
             entry.wrappedValue.content = entry.wrappedValue.content
-                .replacingOccurrences(of: debouncedSearchQuery, with: replacement, options: options)
+                .replacingOccurrences(of: debouncedSearchQuery, with: replacement, options: searchOptions)
         }
 
         searchSelectionIndex = 0
     }
 
+    // MARK: - search and replace utility functions
     private func countSubstringOcurrences(of substring: String, in value: String) -> Int {
         var count = 0
         var searchRange = value.startIndex..<value.endIndex
-        var options = String.CompareOptions()
 
-        if !matchCase {
-            options.insert(.caseInsensitive)
-        }
-
-        while let range = value[searchRange].range(of: substring, options: options) {
+        while let range = value[searchRange].range(of: substring, options: searchOptions) {
             count += 1
             searchRange = range.upperBound..<value.endIndex
         }
@@ -512,15 +519,10 @@ struct FileTableView: View {
         }
 
         var searchRange = attributed.startIndex..<attributed.endIndex
-        var options = String.CompareOptions()
-
-        if !matchCase {
-            options.insert(.caseInsensitive)
-        }
 
         let selectedMatch = matches[searchSelectionIndex]
 
-        while let range = attributed[searchRange].range(of: debouncedSearchQuery, options: options) {
+        while let range = attributed[searchRange].range(of: debouncedSearchQuery, options: searchOptions) {
             if entry.id == selectedMatch.entryId,
                let stringRange = Range<String.Index>(range, in: entry.content),
                stringRange == selectedMatch.range {
